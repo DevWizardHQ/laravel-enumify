@@ -20,7 +20,7 @@ class TypeScriptGenerator
     ) {
         $allowedLocalizationModes = ['none', 'react', 'vue'];
 
-        if (!in_array($this->localizationMode, $allowedLocalizationModes, true)) {
+        if (! in_array($this->localizationMode, $allowedLocalizationModes, true)) {
             throw new \InvalidArgumentException(
                 sprintf(
                     'Invalid localization mode "%s". Allowed values are: %s.',
@@ -110,7 +110,7 @@ class TypeScriptGenerator
         $lines[] = " * {$enum->name} enum methods (PHP-style)";
         $lines[] = ' */';
 
-        if (!$this->isStaticMode()) {
+        if (! $this->isStaticMode()) {
             // Generate as a Hook / Composable function
             $lines[] = "export function use{$enum->name}Utils() {";
             $lines[] = '    const { __ } = useLocalizer();';
@@ -134,7 +134,7 @@ class TypeScriptGenerator
         }
 
         // Generate options() method
-        if (!$this->isStaticMode()) {
+        if (! $this->isStaticMode()) {
             // Hook / Composable: methods are indented 8 spaces
             $lines[] = "        options(): {$enum->name}[] {";
             $lines[] = "            return Object.values({$enum->name});";
@@ -146,7 +146,7 @@ class TypeScriptGenerator
             $lines[] = '  },';
         }
 
-        if (!$this->isStaticMode()) {
+        if (! $this->isStaticMode()) {
             $lines[] = '    };';
             $lines[] = '}';
         } else {
@@ -164,7 +164,7 @@ class TypeScriptGenerator
     private function generateLabelMethod(EnumDefinition $enum): array
     {
         $lines = [];
-        
+
         if ($this->isStaticMode()) {
             $lines[] = "  label(status: {$enum->name}): string {";
             $lines[] = '    switch (status) {';
@@ -178,7 +178,7 @@ class TypeScriptGenerator
             $escapedLabel = $this->escapeString($label);
 
             $tsName = $case->getTypeScriptName();
-            
+
             if ($this->isStaticMode()) {
                 $lines[] = "      case {$enum->name}.{$tsName}:";
                 $lines[] = "        return '{$escapedLabel}';";
