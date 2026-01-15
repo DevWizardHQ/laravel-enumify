@@ -1,0 +1,39 @@
+name: Node Checks
+
+on:
+  pull_request:
+    paths:
+      - "packages/vite-plugin-enumify/**"
+      - ".github/workflows/node-checks.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "packages/vite-plugin-enumify/**"
+      - ".github/workflows/node-checks.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/vite-plugin-enumify
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: "pnpm"
+          cache-dependency-path: packages/vite-plugin-enumify/pnpm-lock.yaml
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          run_install: false
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build
+        run: pnpm run build
+      - name: Typecheck
+        run: pnpm run typecheck
