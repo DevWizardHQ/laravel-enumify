@@ -195,7 +195,7 @@ class TypeScriptGenerator
             $lines[] = '            }';
             $lines[] = '        },';
         }
-        
+
         $lines[] = '';
 
         return $lines;
@@ -277,7 +277,7 @@ class TypeScriptGenerator
         } else {
             $lines[] = '        },';
         }
-        
+
         $lines[] = '';
 
         return $lines;
