@@ -199,6 +199,24 @@ describe('enumify:sync command', function () {
             ->assertSuccessful();
     });
 
+    it('handles empty enum discovery with quiet flag', function () {
+        $emptyDir = sys_get_temp_dir().'/enumify-empty-'.uniqid();
+        mkdir($emptyDir, 0755, true);
+
+        config()->set('enumify.paths.enums', [$emptyDir]);
+
+        $this
+            ->artisan('enumify:sync', ['--force' => true, '--quiet' => true])
+            ->assertSuccessful();
+    });
+
+    it('suppresses output with quiet flag and non-json format', function () {
+        $this
+            ->artisan('enumify:sync', ['--force' => true, '--quiet' => true])
+            ->assertSuccessful()
+            ->expectsNoOutput();
+    });
+
     it('supports relative output paths', function () {
         $relativePath = 'tests/output-relative-'.uniqid();
         config()->set('enumify.paths.output', $relativePath);
