@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v0.2.0 - 2026-01-15
+
+### What's Changed
+
+* Fix CI failures: add missing test coverage and resolve prefer-lowest dependency conflicts by @Copilot in https://github.com/DevWizardHQ/laravel-enumify/pull/4
+* Preserve exact casing from PHP enum case names in TypeScript by @iqbalhasandev in https://github.com/DevWizardHQ/laravel-enumify/pull/3
+
+### New Contributors
+
+* @Copilot made their first contribution in https://github.com/DevWizardHQ/laravel-enumify/pull/4
+* @iqbalhasandev made their first contribution in https://github.com/DevWizardHQ/laravel-enumify/pull/3
+
+**Full Changelog**: https://github.com/DevWizardHQ/laravel-enumify/compare/v0.1.0...v0.2.0
+
 ## v0.1.0 - 2026-01-15
 
 ### What's Changed
