@@ -28,36 +28,30 @@ describe('enumify:install command', function () {
     it('creates output directory, gitkeep, and appends gitignore', function () {
         File::put($this->tempBasePath.'/.gitignore', "# Base\n");
 
-        $this->artisan('enumify:install')
-            ->expectsConfirmation('Would you like to automatically add these patterns to .gitignore?', 'yes')
+        $this
+            ->artisan('enumify:install')
+            ->expectsConfirmation('Would you like to install the @devwizard/vite-plugin-enumify plugin using npm?', 'no')
             ->assertSuccessful();
 
-        expect(is_dir($this->tempBasePath.'/resources/js/enums'))->toBeTrue()
-            ->and(file_exists($this->tempBasePath.'/resources/js/enums/.gitkeep'))->toBeTrue()
+        expect(is_dir($this->tempBasePath.'/resources/js/enums'))
+            ->toBeTrue()
+            ->and(file_exists($this->tempBasePath.'/resources/js/enums/.gitkeep'))
+            ->toBeTrue()
             ->and(file_get_contents($this->tempBasePath.'/.gitignore'))
             ->toContain('/resources/js/enums/*')
             ->toContain('!/resources/js/enums/.gitkeep');
     });
 
-    it('does not append gitignore when declined', function () {
-        File::put($this->tempBasePath.'/.gitignore', "# Base\n");
-
-        $this->artisan('enumify:install')
-            ->expectsConfirmation('Would you like to automatically add these patterns to .gitignore?', 'no')
-            ->assertSuccessful();
-
-        expect(file_get_contents($this->tempBasePath.'/.gitignore'))
-            ->not
-            ->toContain('/resources/js/enums/*');
-    });
-
-    it('skips gitignore prompt when patterns already exist', function () {
+    it('skips gitignore update when patterns already exist can run plugin install logic', function () {
         File::put(
             $this->tempBasePath.'/.gitignore',
             "/resources/js/enums/*\n!/resources/js/enums/.gitkeep\n"
         );
 
-        $this->artisan('enumify:install')->assertSuccessful();
+        $this
+            ->artisan('enumify:install')
+            ->expectsConfirmation('Would you like to install the @devwizard/vite-plugin-enumify plugin using npm?', 'no')
+            ->assertSuccessful();
 
         expect(file_get_contents($this->tempBasePath.'/.gitignore'))
             ->toContain('/resources/js/enums/*')
@@ -72,8 +66,10 @@ describe('enumify:install command', function () {
             "/resources/js/enums/*\n!/resources/js/enums/.gitkeep\n"
         );
 
-        $this->artisan('enumify:install', ['--force' => true])
+        $this
+            ->artisan('enumify:install', ['--force' => true])
             ->expectsConfirmation('Config file already exists. Overwrite?', 'no')
+            ->expectsConfirmation('Would you like to install the @devwizard/vite-plugin-enumify plugin using npm?', 'no')
             ->assertSuccessful();
 
         expect(file_get_contents($configPath))->toContain('custom');
@@ -87,8 +83,10 @@ describe('enumify:install command', function () {
             "/resources/js/enums/*\n!/resources/js/enums/.gitkeep\n"
         );
 
-        $this->artisan('enumify:install', ['--force' => true])
+        $this
+            ->artisan('enumify:install', ['--force' => true])
             ->expectsConfirmation('Config file already exists. Overwrite?', 'yes')
+            ->expectsConfirmation('Would you like to install the @devwizard/vite-plugin-enumify plugin using npm?', 'no')
             ->assertSuccessful();
     });
 
@@ -101,6 +99,9 @@ describe('enumify:install command', function () {
             "/resources/js/enums/*\n!/resources/js/enums/.gitkeep\n"
         );
 
-        $this->artisan('enumify:install')->assertSuccessful();
+        $this
+            ->artisan('enumify:install')
+            ->expectsConfirmation('Would you like to install the @devwizard/vite-plugin-enumify plugin using npm?', 'no')
+            ->assertSuccessful();
     });
 });

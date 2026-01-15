@@ -6,8 +6,12 @@ namespace DevWizardHQ\Enumify\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Process;
 
 use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\info;
+use function Laravel\Prompts\select;
+use function Laravel\Prompts\warning;
 
 class InstallCommand extends Command
 {
@@ -39,14 +43,17 @@ class InstallCommand extends Command
         // Step 2: Create .gitkeep file
         $this->createGitkeep();
 
-        // Step 3: Show .gitignore instructions
-        $this->showGitignoreInstructions();
+        // Step 3: Update .gitignore (Auto)
+        $this->updateGitignore();
 
         // Step 4: Publish config
         $this->publishConfig();
 
-        // Step 5: Show next steps
-        $this->showNextSteps();
+        // Step 5: Install Node Dependency
+        $installed = $this->installNodeDependency();
+
+        // Step 6: Show next steps
+        $this->showNextSteps($installed);
 
         return self::SUCCESS;
     }
@@ -104,60 +111,47 @@ class InstallCommand extends Command
         );
     }
 
-    private function showGitignoreInstructions(): void
+    private function updateGitignore(): void
     {
         /** @var string $outputPath */
         $outputPath = config('enumify.paths.output', 'resources/js/enums');
-
-        $this->newLine();
-        $this->components->warn('Add the following lines to your .gitignore file:');
-        $this->newLine();
-
-        $this->line("  <fg=cyan>/{$outputPath}/*</>");
-        $this->line("  <fg=cyan>!/{$outputPath}/.gitkeep</>");
-
-        $this->newLine();
-
-        // Try to auto-append to .gitignore
         $gitignorePath = base_path('.gitignore');
 
-        if (File::exists($gitignorePath)) {
-            $content = File::get($gitignorePath);
-            $pattern1 = "/{$outputPath}/*";
-            $pattern2 = "!/{$outputPath}/.gitkeep";
-
-            $hasPattern1 = str_contains($content, $pattern1);
-            $hasPattern2 = str_contains($content, $pattern2);
-
-            if ($hasPattern1 && $hasPattern2) {
-                $this->components->twoColumnDetail(
-                    '.gitignore patterns',
-                    '<fg=green>Already configured</>'
-                );
-
-                return;
-            }
-
-            if (confirm('Would you like to automatically add these patterns to .gitignore?', true)) {
-                $additions = [];
-
-                if (! $hasPattern1) {
-                    $additions[] = $pattern1;
-                }
-
-                if (! $hasPattern2) {
-                    $additions[] = $pattern2;
-                }
-
-                $newContent = rtrim($content)."\n\n# Laravel Enumify\n".implode("\n", $additions)."\n";
-                File::put($gitignorePath, $newContent);
-
-                $this->components->twoColumnDetail(
-                    '.gitignore patterns',
-                    '<fg=green>Added</>'
-                );
-            }
+        if (! File::exists($gitignorePath)) {
+            return;
         }
+
+        $content = File::get($gitignorePath);
+        $pattern1 = "/{$outputPath}/*";
+        $pattern2 = "!/{$outputPath}/.gitkeep";
+
+        $hasPattern1 = str_contains($content, $pattern1);
+        $hasPattern2 = str_contains($content, $pattern2);
+
+        if ($hasPattern1 && $hasPattern2) {
+            $this->components->twoColumnDetail(
+                '.gitignore',
+                '<fg=yellow>Already configured</>'
+            );
+
+            return;
+        }
+
+        $additions = [];
+        if (! $hasPattern1) {
+            $additions[] = $pattern1;
+        }
+        if (! $hasPattern2) {
+            $additions[] = $pattern2;
+        }
+
+        $newContent = rtrim($content)."\n\n# Laravel Enumify\n".implode("\n", $additions)."\n";
+        File::put($gitignorePath, $newContent);
+
+        $this->components->twoColumnDetail(
+            '.gitignore',
+            '<fg=green>Updated</>'
+        );
     }
 
     private function publishConfig(): void
@@ -185,18 +179,75 @@ class InstallCommand extends Command
         ]);
     }
 
-    private function showNextSteps(): void
+    private function installNodeDependency(): bool
+    {
+        $pm = $this->detectPackageManager();
+        $pluginName = '@devwizard/vite-plugin-enumify';
+
+        $this->newLine();
+        // The prompt specifically requested: "ask to user that they need to the npm/pnpm install @devqizard plugin for not if yes"
+        // I will interpret "is not yes" as check for installation.
+        // Actually, the request says "ask to user... if yes and enter then run the install command... select no then only show the instruction".
+        if (! confirm("Would you like to install the {$pluginName} plugin using {$pm}?", true)) {
+            return false;
+        }
+
+        $command = match ($pm) {
+            'yarn' => "yarn add -D {$pluginName}",
+            'pnpm' => "pnpm add -D {$pluginName}",
+            'bun' => "bun add -d {$pluginName}",
+            default => "npm install --save-dev {$pluginName}",
+        };
+
+        $this->components->info("Running: {$command}");
+
+        $result = Process::run($command);
+
+        if ($result->successful()) {
+            $this->components->info('Plugin installed successfully!');
+
+            return true;
+        }
+
+        $this->components->error('Installation failed.');
+        $this->line($result->errorOutput());
+
+        return false;
+    }
+
+    private function detectPackageManager(): string
+    {
+        if (File::exists(base_path('pnpm-lock.yaml'))) {
+            return 'pnpm';
+        }
+
+        if (File::exists(base_path('yarn.lock'))) {
+            return 'yarn';
+        }
+
+        if (File::exists(base_path('bun.lockb'))) {
+            return 'bun';
+        }
+
+        return 'npm';
+    }
+
+    private function showNextSteps(bool $installed): void
     {
         $this->newLine();
         $this->components->info('Next steps:');
         $this->newLine();
 
-        $this->line('  1. Install the Vite plugin:');
-        $this->newLine();
-        $this->line('     <fg=cyan>npm install @devwizard/vite-plugin-enumify --save-dev</>');
-        $this->newLine();
+        if (! $installed) {
+            $this->line('  1. Install the Vite plugin:');
+            $this->newLine();
+            $this->line('     <fg=cyan>npm install @devwizard/vite-plugin-enumify --save-dev</>');
+            $this->newLine();
+        }
 
-        $this->line('  2. Add to your vite.config.js:');
+        $idx = $installed ? 1 : 2;
+
+        $this->line("  {$idx}. Add to your vite.config.js:");
         $this->newLine();
         $this->line("     <fg=cyan>import enumify from '@devwizard/vite-plugin-enumify'</>");
         $this->newLine();
@@ -208,10 +259,12 @@ class InstallCommand extends Command
         $this->line('     <fg=cyan>})</>');
         $this->newLine();
 
-        $this->line('  3. Create PHP enums in <fg=cyan>app/Enums/</>');
+        $idx++;
+        $this->line("  {$idx}. Create PHP enums in <fg=cyan>app/Enums/</>");
         $this->newLine();
 
-        $this->line('  4. Run sync manually or start Vite dev server:');
+        $idx++;
+        $this->line("  {$idx}. Run sync manually or start Vite dev server:");
         $this->newLine();
         $this->line('     <fg=cyan>php artisan enumify:sync</>');
         $this->line('     <fg=cyan>npm run dev</>');
