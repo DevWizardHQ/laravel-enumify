@@ -33,8 +33,8 @@ describe('TypeScriptGenerator', function () {
 
         expect($output)
             ->toContain('export enum OrderStatus {')
-            ->toContain('Pending = "pending",')
-            ->toContain('Shipped = "shipped",');
+            ->toContain('PENDING = "pending",')
+            ->toContain('SHIPPED = "shipped",');
     });
 
     it('generates union type', function () {
@@ -69,8 +69,8 @@ describe('TypeScriptGenerator', function () {
 
         expect($output)
             ->toContain('export const PaymentMethodLabels: Record<PaymentMethod, string> = {')
-            ->toContain('[PaymentMethod.CreditCard]: "Credit Card",')
-            ->toContain('[PaymentMethod.Paypal]: "PayPal",');
+            ->toContain('[PaymentMethod.CREDIT_CARD]: "Credit Card",')
+            ->toContain('[PaymentMethod.PAYPAL]: "PayPal",');
     });
 
     it('humanizes missing labels when some labels are provided', function () {
@@ -88,8 +88,8 @@ describe('TypeScriptGenerator', function () {
         $output = $this->generator->generate($enum);
 
         expect($output)
-            ->toContain('[ReminderStatus.PendingPayment]: "Pending",')
-            ->toContain('[ReminderStatus.AwaitingApproval]: "Awaiting Approval",');
+            ->toContain('[ReminderStatus.PENDING_PAYMENT]: "Pending",')
+            ->toContain('[ReminderStatus.AWAITING_APPROVAL]: "Awaiting Approval",');
     });
 
     it('generates method maps for custom methods', function () {
@@ -114,8 +114,8 @@ describe('TypeScriptGenerator', function () {
 
         expect($output)
             ->toContain('export const CampusStatusColors: Record<CampusStatus, string> = {')
-            ->toContain('[CampusStatus.Active]: "green",')
-            ->toContain('[CampusStatus.Inactive]: "gray",');
+            ->toContain('[CampusStatus.ACTIVE]: "green",')
+            ->toContain('[CampusStatus.INACTIVE]: "gray",');
     });
 
     it('generates boolean method maps with helper functions', function () {
@@ -140,8 +140,8 @@ describe('TypeScriptGenerator', function () {
 
         expect($output)
             ->toContain('export const CampusStatusIsActive: Record<CampusStatus, boolean> = {')
-            ->toContain('[CampusStatus.Active]: true,')
-            ->toContain('[CampusStatus.Inactive]: false,')
+            ->toContain('[CampusStatus.ACTIVE]: true,')
+            ->toContain('[CampusStatus.INACTIVE]: false,')
             ->toContain('export function isActive(value: CampusStatus): boolean {')
             ->toContain('return CampusStatusIsActive[value];');
     });
@@ -168,8 +168,8 @@ describe('TypeScriptGenerator', function () {
 
         expect($output)
             ->toContain('export const CampusStatusPrioritys: Record<CampusStatus, number> = {')
-            ->toContain('[CampusStatus.Active]: 1,')
-            ->toContain('[CampusStatus.Inactive]: 3,');
+            ->toContain('[CampusStatus.ACTIVE]: 1,')
+            ->toContain('[CampusStatus.INACTIVE]: 3,');
     });
 
     it('generates nullable string method maps', function () {
@@ -194,8 +194,8 @@ describe('TypeScriptGenerator', function () {
 
         expect($output)
             ->toContain('export const CampusStatusBadges: Record<CampusStatus, string | null> = {')
-            ->toContain('[CampusStatus.Active]: "primary",')
-            ->toContain('[CampusStatus.Inactive]: null,');
+            ->toContain('[CampusStatus.ACTIVE]: "primary",')
+            ->toContain('[CampusStatus.INACTIVE]: null,');
     });
 
     it('escapes label strings', function () {
@@ -211,7 +211,7 @@ describe('TypeScriptGenerator', function () {
 
         $output = $this->generator->generate($enum);
 
-        expect($output)->toContain('[Alert.Warning]: "Line\\nBreak \\"Alert\\"",');
+        expect($output)->toContain('[Alert.WARNING]: "Line\\nBreak \\"Alert\\"",');
     });
 
     it('renders non-scalar method values as null', function () {
@@ -234,7 +234,7 @@ describe('TypeScriptGenerator', function () {
 
         expect($output)
             ->toContain('export const PayloadPayloads: Record<Payload, unknown> = {')
-            ->toContain('[Payload.Data]: null,');
+            ->toContain('[Payload.DATA]: null,');
     });
 
     it('generates unit enum with case names as values', function () {
@@ -252,8 +252,8 @@ describe('TypeScriptGenerator', function () {
         $output = $this->generator->generate($enum);
 
         expect($output)
-            ->toContain('Low = "LOW",')
-            ->toContain('High = "HIGH",');
+            ->toContain('LOW = "LOW",')
+            ->toContain('HIGH = "HIGH",');
     });
 
     it('generates integer backed enum', function () {
@@ -271,8 +271,8 @@ describe('TypeScriptGenerator', function () {
         $output = $this->generator->generate($enum);
 
         expect($output)
-            ->toContain('Ok = 200,')
-            ->toContain('NotFound = 404,');
+            ->toContain('OK = 200,')
+            ->toContain('NOT_FOUND = 404,');
     });
 
     it('includes header comments', function () {
@@ -319,8 +319,8 @@ describe('TypeScriptGenerator with const style', function () {
 
         expect($output)
             ->toContain('export const OrderStatus = {')
-            ->toContain('Pending: "pending",')
-            ->toContain('Shipped: "shipped",')
+            ->toContain('PENDING: "pending",')
+            ->toContain('SHIPPED: "shipped",')
             ->toContain('} as const;')
             ->toContain('export type OrderStatus = typeof OrderStatus[keyof typeof OrderStatus];');
     });

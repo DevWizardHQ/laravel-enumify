@@ -375,16 +375,16 @@ describe('EnumDiscoveryService', function () {
 });
 
 describe('EnumCaseDefinition', function () {
-    it('converts SCREAMING_SNAKE to PascalCase', function () {
+    it('preserves original case names', function () {
         $case = new EnumCaseDefinition('PENDING_PAYMENT', 'pending_payment');
 
-        expect($case->getTypeScriptName())->toBe('PendingPayment');
+        expect($case->getTypeScriptName())->toBe('PENDING_PAYMENT');
     });
 
     it('handles single word case names', function () {
         $case = new EnumCaseDefinition('ACTIVE', 'active');
 
-        expect($case->getTypeScriptName())->toBe('Active');
+        expect($case->getTypeScriptName())->toBe('ACTIVE');
     });
 
     it('formats string values correctly', function () {

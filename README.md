@@ -112,10 +112,10 @@ enum OrderStatus: string
 ```ts
 // resources/js/enums/order-status.ts
 export enum OrderStatus {
-    Pending = 'pending',
-    Processing = 'processing',
-    Shipped = 'shipped',
-    Delivered = 'delivered',
+    PENDING = 'pending',
+    PROCESSING = 'processing',
+    SHIPPED = 'shipped',
+    DELIVERED = 'delivered',
 }
 
 export type OrderStatusValue = `${OrderStatus}`;
@@ -145,15 +145,15 @@ enum PaymentMethod: string
 
 ```ts
 export enum PaymentMethod {
-    CreditCard = 'credit_card',
-    BankTransfer = 'bank_transfer',
-    Paypal = 'paypal',
+    CREDIT_CARD = 'credit_card',
+    BANK_TRANSFER = 'bank_transfer',
+    PAYPAL = 'paypal',
 }
 
 export const PaymentMethodLabels: Record<PaymentMethod, string> = {
-    [PaymentMethod.CreditCard]: 'Credit Card',
-    [PaymentMethod.BankTransfer]: 'Bank Transfer',
-    [PaymentMethod.Paypal]: 'PayPal',
+    [PaymentMethod.CREDIT_CARD]: 'Credit Card',
+    [PaymentMethod.BANK_TRANSFER]: 'Bank Transfer',
+    [PaymentMethod.PAYPAL]: 'PayPal',
 };
 ```
 
@@ -204,29 +204,29 @@ enum CampusStatus: string
 
 ```ts
 export enum CampusStatus {
-    Active = 'active',
-    Suspended = 'suspended',
-    Inactive = 'inactive',
+    ACTIVE = 'active',
+    SUSPENDED = 'suspended',
+    INACTIVE = 'inactive',
 }
 
 export type CampusStatusValue = `${CampusStatus}`;
 
 export const CampusStatusLabels: Record<CampusStatus, string> = {
-    [CampusStatus.Active]: 'Active',
-    [CampusStatus.Suspended]: 'Suspended',
-    [CampusStatus.Inactive]: 'Inactive',
+    [CampusStatus.ACTIVE]: 'Active',
+    [CampusStatus.SUSPENDED]: 'Suspended',
+    [CampusStatus.INACTIVE]: 'Inactive',
 };
 
 export const CampusStatusColors: Record<CampusStatus, string> = {
-    [CampusStatus.Active]: 'green',
-    [CampusStatus.Suspended]: 'red',
-    [CampusStatus.Inactive]: 'gray',
+    [CampusStatus.ACTIVE]: 'green',
+    [CampusStatus.SUSPENDED]: 'red',
+    [CampusStatus.INACTIVE]: 'gray',
 };
 
 export const CampusStatusIsActive: Record<CampusStatus, boolean> = {
-    [CampusStatus.Active]: true,
-    [CampusStatus.Suspended]: false,
-    [CampusStatus.Inactive]: false,
+    [CampusStatus.ACTIVE]: true,
+    [CampusStatus.SUSPENDED]: false,
+    [CampusStatus.INACTIVE]: false,
 };
 
 export function isActive(value: CampusStatus): boolean {
@@ -234,9 +234,9 @@ export function isActive(value: CampusStatus): boolean {
 }
 
 export const CampusStatusBadges: Record<CampusStatus, string | null> = {
-    [CampusStatus.Active]: 'primary',
-    [CampusStatus.Suspended]: 'warning',
-    [CampusStatus.Inactive]: null,
+    [CampusStatus.ACTIVE]: 'primary',
+    [CampusStatus.SUSPENDED]: 'warning',
+    [CampusStatus.INACTIVE]: null,
 };
 ```
 
@@ -245,10 +245,10 @@ export const CampusStatusBadges: Record<CampusStatus, string | null> = {
 ```ts
 import { CampusStatus, CampusStatusLabels, CampusStatusColors, isActive } from '@/enums';
 
-const status: CampusStatus = CampusStatus.Active;
+const status: CampusStatus = CampusStatus.ACTIVE;
 
-console.log(CampusStatusLabels[status]);
-const badgeColor = CampusStatusColors[status];
+console.log(CampusStatusLabels[status]); // 'Active'
+const badgeColor = CampusStatusColors[status]; // 'green'
 
 if (isActive(status)) {
     // Allow access

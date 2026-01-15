@@ -108,8 +108,8 @@ describe('enumify:sync command', function () {
 
         expect($content)
             ->toContain('export enum OrderStatus {')
-            ->toContain('Pending = "pending",')
-            ->toContain('Shipped = "shipped",');
+            ->toContain('PENDING = "pending",')
+            ->toContain('SHIPPED = "shipped",');
     });
 
     it('generates files with labels', function () {
@@ -121,7 +121,7 @@ describe('enumify:sync command', function () {
 
         expect($content)
             ->toContain('export const PaymentMethodLabels: Record<PaymentMethod, string> = {')
-            ->toContain('[PaymentMethod.CreditCard]: "Credit Card",');
+            ->toContain('[PaymentMethod.CREDIT_CARD]: "Credit Card",');
     });
 
     it('generates files with custom method maps', function () {
@@ -133,7 +133,7 @@ describe('enumify:sync command', function () {
 
         expect($content)
             ->toContain('export const CampusStatusColors: Record<CampusStatus, string> = {')
-            ->toContain('[CampusStatus.Active]: "green",')
+            ->toContain('[CampusStatus.ACTIVE]: "green",')
             ->toContain('export const CampusStatusIsActive: Record<CampusStatus, boolean> = {')
             ->toContain('export function isActive(value: CampusStatus): boolean {');
     });
