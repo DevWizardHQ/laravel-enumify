@@ -53,24 +53,9 @@ This will:
 -   Print the `.gitignore` lines to add (and offer to append them)
 -   Offer to publish the config file
 
-### 3) Add the `.gitignore` rules
+### 3) Configure Vite
 
-```gitignore
-/resources/js/enums/*
-!/resources/js/enums/.gitkeep
-```
-
-### 4) Install the Vite plugin
-
-```bash
-npm install @devwizard/vite-plugin-enumify --save-dev
-# or
-pnpm add -D @devwizard/vite-plugin-enumify
-# or
-yarn add -D @devwizard/vite-plugin-enumify
-```
-
-### 5) Add the plugin to Vite
+If the installer successfully installed the plugin, you just need to add it to your `vite.config.js`:
 
 ```ts
 import { defineConfig } from "vite";
@@ -86,6 +71,16 @@ export default defineConfig({
         }),
     ],
 });
+```
+
+If the automatic installation skipped or failed, manually install the plugin:
+
+```bash
+npm install @devwizard/vite-plugin-enumify --save-dev
+# or
+pnpm add -D @devwizard/vite-plugin-enumify
+# or
+yarn add -D @devwizard/vite-plugin-enumify
 ```
 
 ## Usage
@@ -111,53 +106,23 @@ enum OrderStatus: string
 
 ```ts
 // resources/js/enums/order-status.ts
-export enum OrderStatus {
-    PENDING = "pending",
-    PROCESSING = "processing",
-    SHIPPED = "shipped",
-    DELIVERED = "delivered",
-}
+export const OrderStatus = {
+    PENDING: "pending",
+    PROCESSING: "processing",
+    SHIPPED: "shipped",
+    DELIVERED: "delivered",
+} as const;
 
-export type OrderStatusValue = `${OrderStatus}`;
-```
+export type OrderStatus = (typeof OrderStatus)[keyof typeof OrderStatus];
 
-### With Labels
-
-```php
-enum PaymentMethod: string
-{
-    case CREDIT_CARD = 'credit_card';
-    case BANK_TRANSFER = 'bank_transfer';
-    case PAYPAL = 'paypal';
-
-    public function label(): string
-    {
-        return match ($this) {
-            self::CREDIT_CARD => 'Credit Card',
-            self::BANK_TRANSFER => 'Bank Transfer',
-            self::PAYPAL => 'PayPal',
-        };
-    }
-}
-```
-
-**Generated TypeScript:**
-
-```ts
-export enum PaymentMethod {
-    CREDIT_CARD = "credit_card",
-    BANK_TRANSFER = "bank_transfer",
-    PAYPAL = "paypal",
-}
-
-export const PaymentMethodLabels: Record<PaymentMethod, string> = {
-    [PaymentMethod.CREDIT_CARD]: "Credit Card",
-    [PaymentMethod.BANK_TRANSFER]: "Bank Transfer",
-    [PaymentMethod.PAYPAL]: "PayPal",
+export const OrderStatusUtils = {
+    options(): OrderStatus[] {
+        return Object.values(OrderStatus);
+    },
 };
 ```
 
-### With Custom Methods
+### With Labels & Custom Methods
 
 ```php
 enum CampusStatus: string
@@ -188,76 +153,73 @@ enum CampusStatus: string
     {
         return $this === self::ACTIVE;
     }
-
-    public function badge(): ?string
-    {
-        return match ($this) {
-            self::ACTIVE => 'primary',
-            self::SUSPENDED => 'warning',
-            self::INACTIVE => null,
-        };
-    }
 }
 ```
 
 **Generated TypeScript:**
 
 ```ts
-export enum CampusStatus {
-    ACTIVE = "active",
-    SUSPENDED = "suspended",
-    INACTIVE = "inactive",
-}
+export const CampusStatus = {
+    ACTIVE: "active",
+    SUSPENDED: "suspended",
+    INACTIVE: "inactive",
+} as const;
 
-export type CampusStatusValue = `${CampusStatus}`;
+export type CampusStatus = (typeof CampusStatus)[keyof typeof CampusStatus];
 
-export const CampusStatusLabels: Record<CampusStatus, string> = {
-    [CampusStatus.ACTIVE]: "Active",
-    [CampusStatus.SUSPENDED]: "Suspended",
-    [CampusStatus.INACTIVE]: "Inactive",
-};
+export const CampusStatusUtils = {
+    label(status: CampusStatus): string {
+        switch (status) {
+            case CampusStatus.ACTIVE:
+                return "Active";
+            case CampusStatus.SUSPENDED:
+                return "Suspended";
+            case CampusStatus.INACTIVE:
+                return "Inactive";
+        }
+    },
 
-export const CampusStatusColors: Record<CampusStatus, string> = {
-    [CampusStatus.ACTIVE]: "green",
-    [CampusStatus.SUSPENDED]: "red",
-    [CampusStatus.INACTIVE]: "gray",
-};
+    color(status: CampusStatus): string {
+        switch (status) {
+            case CampusStatus.ACTIVE:
+                return "green";
+            case CampusStatus.SUSPENDED:
+                return "red";
+            case CampusStatus.INACTIVE:
+                return "gray";
+        }
+    },
 
-export const CampusStatusIsActive: Record<CampusStatus, boolean> = {
-    [CampusStatus.ACTIVE]: true,
-    [CampusStatus.SUSPENDED]: false,
-    [CampusStatus.INACTIVE]: false,
-};
+    isActive(status: CampusStatus): boolean {
+        return status === CampusStatus.ACTIVE;
+    },
 
-export function isActive(value: CampusStatus): boolean {
-    return CampusStatusIsActive[value];
-}
-
-export const CampusStatusBadges: Record<CampusStatus, string | null> = {
-    [CampusStatus.ACTIVE]: "primary",
-    [CampusStatus.SUSPENDED]: "warning",
-    [CampusStatus.INACTIVE]: null,
+    options(): CampusStatus[] {
+        return Object.values(CampusStatus);
+    },
 };
 ```
 
 ### Frontend Usage
 
 ```ts
-import {
-    CampusStatus,
-    CampusStatusLabels,
-    CampusStatusColors,
-    isActive,
-} from "@/enums";
+import { CampusStatus, CampusStatusUtils } from "@/enums/campus-status";
 
 const status: CampusStatus = CampusStatus.ACTIVE;
 
-console.log(CampusStatusLabels[status]); // 'Active'
-const badgeColor = CampusStatusColors[status]; // 'green'
+// Get label
+console.log(CampusStatusUtils.label(status)); // 'Active'
 
-if (isActive(status)) {
+// Get custom method value
+const badgeColor = CampusStatusUtils.color(status); // 'green'
+
+// Check state (boolean method)
+if (CampusStatusUtils.isActive(status)) {
     // Allow access
 }
+
+// Get all options (e.g., for a dropdown)
+const options = CampusStatusUtils.options();
 ```
 
 ## Method Conversion Rules
