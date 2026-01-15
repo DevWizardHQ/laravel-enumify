@@ -17,7 +17,19 @@ class TypeScriptGenerator
         private readonly bool $generateLabelMaps = true,
         private readonly bool $generateMethodMaps = true,
         private readonly string $localizationMode = 'none',
-    ) {}
+    ) {
+        $allowedLocalizationModes = ['none', 'react', 'vue'];
+
+        if (!in_array($this->localizationMode, $allowedLocalizationModes, true)) {
+            throw new \InvalidArgumentException(
+                sprintf(
+                    'Invalid localization mode "%s". Allowed values are: %s.',
+                    $this->localizationMode,
+                    implode(', ', $allowedLocalizationModes)
+                )
+            );
+        }
+    }
 
     /**
      * Generate TypeScript content for an enum definition.
@@ -114,9 +126,17 @@ class TypeScriptGenerator
         }
 
         // Generate options() method
-        $lines[] = "        options(): {$enum->name}[] {";
-        $lines[] = "            return Object.values({$enum->name});";
-        $lines[] = '        },';
+        if ($this->localizationMode !== 'none') {
+            // Hook / Composable: methods are indented 8 spaces
+            $lines[] = "        options(): {$enum->name}[] {";
+            $lines[] = "            return Object.values({$enum->name});";
+            $lines[] = '        },';
+        } else {
+            // Static object: methods are indented 2 spaces for backward compatibility
+            $lines[] = "  options(): {$enum->name}[] {";
+            $lines[] = "    return Object.values({$enum->name});";
+            $lines[] = '  },';
+        }
 
         if ($this->localizationMode !== 'none') {
             $lines[] = '    };';
@@ -136,24 +156,38 @@ class TypeScriptGenerator
     private function generateLabelMethod(EnumDefinition $enum): array
     {
         $lines = [];
-        $lines[] = "        label(status: {$enum->name}): string {";
-        $lines[] = '            switch (status) {';
+        
+        if ($this->localizationMode === 'none') {
+            $lines[] = "  label(status: {$enum->name}): string {";
+            $lines[] = '    switch (status) {';
+        } else {
+            $lines[] = "        label(status: {$enum->name}): string {";
+            $lines[] = '            switch (status) {';
+        }
 
         foreach ($enum->cases as $case) {
             $label = $case->label ?? $this->humanize($case->name);
             $escapedLabel = $this->escapeString($label);
 
             $tsName = $case->getTypeScriptName();
-            $lines[] = "                case {$enum->name}.{$tsName}:";
-            if ($this->localizationMode !== 'none') {
-                $lines[] = "                    return __('{$escapedLabel}');";
+            
+            if ($this->localizationMode === 'none') {
+                $lines[] = "      case {$enum->name}.{$tsName}:";
+                $lines[] = "        return '{$escapedLabel}';";
             } else {
-                $lines[] = "                    return '{$escapedLabel}';";
+                $lines[] = "                case {$enum->name}.{$tsName}:";
+                $lines[] = "                    return __('{$escapedLabel}');";
             }
         }
 
-        $lines[] = '            }';
-        $lines[] = '        },';
+        if ($this->localizationMode === 'none') {
+            $lines[] = '    }';
+            $lines[] = '  },';
+        } else {
+            $lines[] = '            }';
+            $lines[] = '        },';
+        }
+        
         $lines[] = '';
 
         return $lines;
@@ -170,7 +204,12 @@ class TypeScriptGenerator
         $methodName = $method->name;
         $returnType = $method->getTypeScriptType();
 
-        $lines[] = "        {$methodName}(status: {$enum->name}): {$returnType} {";
+        // Method signature indentation
+        if ($this->localizationMode === 'none') {
+            $lines[] = "  {$methodName}(status: {$enum->name}): {$returnType} {";
+        } else {
+            $lines[] = "        {$methodName}(status: {$enum->name}): {$returnType} {";
+        }
 
         if ($method->isBooleanMethod()) {
             $trueCases = [];
@@ -180,28 +219,57 @@ class TypeScriptGenerator
                 }
             }
 
-            if (count($trueCases) === 1) {
-                $lines[] = "            return status === {$enum->name}.{$trueCases[0]};";
-            } elseif (count($trueCases) === 0) {
-                $lines[] = '            return false;';
+            if ($this->localizationMode === 'none') {
+                if (count($trueCases) === 1) {
+                    $lines[] = "    return status === {$enum->name}.{$trueCases[0]};";
+                } elseif (count($trueCases) === 0) {
+                    $lines[] = '    return false;';
+                } else {
+                    $checks = array_map(fn ($c) => "status === {$enum->name}.{$c}", $trueCases);
+                    $lines[] = '    return '.implode(' || ', $checks).';';
+                }
             } else {
-                $checks = array_map(fn ($c) => "status === {$enum->name}.{$c}", $trueCases);
-                $lines[] = '            return '.implode(' || ', $checks).';';
+                if (count($trueCases) === 1) {
+                    $lines[] = "            return status === {$enum->name}.{$trueCases[0]};";
+                } elseif (count($trueCases) === 0) {
+                    $lines[] = '            return false;';
+                } else {
+                    $checks = array_map(fn ($c) => "status === {$enum->name}.{$c}", $trueCases);
+                    $lines[] = '            return '.implode(' || ', $checks).';';
+                }
             }
         } else {
-            $lines[] = '            switch (status) {';
-            foreach ($enum->cases as $case) {
-                $val = $method->values[$case->name] ?? null;
-                $tsVal = $this->formatValue($val);
+            if ($this->localizationMode === 'none') {
+                $lines[] = '    switch (status) {';
+                foreach ($enum->cases as $case) {
+                    $val = $method->values[$case->name] ?? null;
+                    $tsVal = $this->formatValue($val);
 
-                $tsName = $case->getTypeScriptName();
-                $lines[] = "                case {$enum->name}.{$tsName}:";
-                $lines[] = "                    return {$tsVal};";
+                    $tsName = $case->getTypeScriptName();
+                    $lines[] = "      case {$enum->name}.{$tsName}:";
+                    $lines[] = "        return {$tsVal};";
+                }
+                $lines[] = '    }';
+            } else {
+                $lines[] = '            switch (status) {';
+                foreach ($enum->cases as $case) {
+                    $val = $method->values[$case->name] ?? null;
+                    $tsVal = $this->formatValue($val);
+
+                    $tsName = $case->getTypeScriptName();
+                    $lines[] = "                case {$enum->name}.{$tsName}:";
+                    $lines[] = "                    return {$tsVal};";
+                }
+                $lines[] = '            }';
             }
-            $lines[] = '            }';
         }
 
-        $lines[] = '        },';
+        if ($this->localizationMode === 'none') {
+            $lines[] = '  },';
+        } else {
+            $lines[] = '        },';
+        }
+        
         $lines[] = '';
 
         return $lines;
