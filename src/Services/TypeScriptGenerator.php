@@ -32,6 +32,14 @@ class TypeScriptGenerator
     }
 
     /**
+     * Check if the generator is in static mode (non-localized).
+     */
+    private function isStaticMode(): bool
+    {
+        return $this->localizationMode === 'none';
+    }
+
+    /**
      * Generate TypeScript content for an enum definition.
      */
     public function generate(EnumDefinition $enum): string
@@ -102,7 +110,7 @@ class TypeScriptGenerator
         $lines[] = " * {$enum->name} enum methods (PHP-style)";
         $lines[] = ' */';
 
-        if ($this->localizationMode !== 'none') {
+        if (!$this->isStaticMode()) {
             // Generate as a Hook / Composable function
             $lines[] = "export function use{$enum->name}Utils() {";
             $lines[] = '    const { __ } = useLocalizer();';
@@ -126,7 +134,7 @@ class TypeScriptGenerator
         }
 
         // Generate options() method
-        if ($this->localizationMode !== 'none') {
+        if (!$this->isStaticMode()) {
             // Hook / Composable: methods are indented 8 spaces
             $lines[] = "        options(): {$enum->name}[] {";
             $lines[] = "            return Object.values({$enum->name});";
@@ -138,7 +146,7 @@ class TypeScriptGenerator
             $lines[] = '  },';
         }
 
-        if ($this->localizationMode !== 'none') {
+        if (!$this->isStaticMode()) {
             $lines[] = '    };';
             $lines[] = '}';
         } else {
@@ -157,7 +165,7 @@ class TypeScriptGenerator
     {
         $lines = [];
         
-        if ($this->localizationMode === 'none') {
+        if ($this->isStaticMode()) {
             $lines[] = "  label(status: {$enum->name}): string {";
             $lines[] = '    switch (status) {';
         } else {
@@ -171,7 +179,7 @@ class TypeScriptGenerator
 
             $tsName = $case->getTypeScriptName();
             
-            if ($this->localizationMode === 'none') {
+            if ($this->isStaticMode()) {
                 $lines[] = "      case {$enum->name}.{$tsName}:";
                 $lines[] = "        return '{$escapedLabel}';";
             } else {
@@ -180,7 +188,7 @@ class TypeScriptGenerator
             }
         }
 
-        if ($this->localizationMode === 'none') {
+        if ($this->isStaticMode()) {
             $lines[] = '    }';
             $lines[] = '  },';
         } else {
@@ -205,7 +213,7 @@ class TypeScriptGenerator
         $returnType = $method->getTypeScriptType();
 
         // Method signature indentation
-        if ($this->localizationMode === 'none') {
+        if ($this->isStaticMode()) {
             $lines[] = "  {$methodName}(status: {$enum->name}): {$returnType} {";
         } else {
             $lines[] = "        {$methodName}(status: {$enum->name}): {$returnType} {";
@@ -219,7 +227,7 @@ class TypeScriptGenerator
                 }
             }
 
-            if ($this->localizationMode === 'none') {
+            if ($this->isStaticMode()) {
                 if (count($trueCases) === 1) {
                     $lines[] = "    return status === {$enum->name}.{$trueCases[0]};";
                 } elseif (count($trueCases) === 0) {
@@ -239,7 +247,7 @@ class TypeScriptGenerator
                 }
             }
         } else {
-            if ($this->localizationMode === 'none') {
+            if ($this->isStaticMode()) {
                 $lines[] = '    switch (status) {';
                 foreach ($enum->cases as $case) {
                     $val = $method->values[$case->name] ?? null;
@@ -264,7 +272,7 @@ class TypeScriptGenerator
             }
         }
 
-        if ($this->localizationMode === 'none') {
+        if ($this->isStaticMode()) {
             $lines[] = '  },';
         } else {
             $lines[] = '        },';
