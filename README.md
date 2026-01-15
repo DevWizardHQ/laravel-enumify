@@ -227,6 +227,16 @@ const options = CampusStatusUtils.options();
 
 Enumify supports automatic localization for React and Vue applications using `@devwizard/laravel-localizer-react` or `@devwizard/laravel-localizer-vue`.
 
+**Prerequisites:** Install the appropriate localization package for your framework:
+
+```bash
+# For React
+npm install @devwizard/laravel-localizer-react
+
+# For Vue
+npm install @devwizard/laravel-localizer-vue
+```
+
 1. **Configure the mode** in `config/enumify.php`:
 
 ```php
@@ -246,7 +256,7 @@ export const CampusStatus = {
 } as const;
 
 /**
- * React Hook for CampusStatus utils
+ * CampusStatus enum methods (PHP-style)
  */
 export function useCampusStatusUtils() {
     const { __ } = useLocalizer();
@@ -257,6 +267,8 @@ export function useCampusStatusUtils() {
                 case CampusStatus.ACTIVE:
                     return __("Active");
                 // ...
+                default:
+                    return status;
             }
         },
 
