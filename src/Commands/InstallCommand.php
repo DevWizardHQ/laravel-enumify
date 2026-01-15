@@ -9,9 +9,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
 
 use function Laravel\Prompts\confirm;
-use function Laravel\Prompts\info;
 use function Laravel\Prompts\select;
-use function Laravel\Prompts\warning;
 
 class InstallCommand extends Command
 {

@@ -8,7 +8,7 @@ use DevWizardHQ\Enumify\Data\EnumMethodDefinition;
 use DevWizardHQ\Enumify\Services\TypeScriptGenerator;
 
 test('it matches the specific CampusStatus requirement', function () {
-    $generator = new TypeScriptGenerator();
+    $generator = new TypeScriptGenerator;
 
     $enum = new EnumDefinition(
         fqcn: 'App\Enums\CampusStatus',

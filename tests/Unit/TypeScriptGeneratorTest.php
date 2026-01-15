@@ -8,7 +8,7 @@ use DevWizardHQ\Enumify\Data\EnumMethodDefinition;
 use DevWizardHQ\Enumify\Services\TypeScriptGenerator;
 
 beforeEach(function () {
-    $this->generator = new TypeScriptGenerator();
+    $this->generator = new TypeScriptGenerator;
 });
 
 describe('TypeScriptGenerator', function () {
