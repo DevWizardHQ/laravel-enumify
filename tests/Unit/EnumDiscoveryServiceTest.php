@@ -329,7 +329,7 @@ describe('EnumDiscoveryService', function () {
         $integerType = new ReflectionFunction(fn (): int => 1);
         $unionNumbers = new ReflectionFunction(fn (): int|float => 1);
         $unsupportedUnion = new ReflectionFunction(fn (): string|array => 'x');
-        $intersection = new ReflectionFunction(fn (): \ArrayAccess&\Countable => new \ArrayObject());
+        $intersection = new ReflectionFunction(fn (): \ArrayAccess&\Countable => new \ArrayObject);
         $unionWithIntersection = new ReflectionFunction(fn (): (\ArrayAccess&\Countable)|string => 'x');
 
         expect($resolve->invoke($this->discovery, null))->toBeNull()
