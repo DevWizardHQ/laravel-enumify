@@ -144,6 +144,62 @@ describe('TypeScriptGenerator', function () {
             ->toContain('return status === CampusStatus.INACTIVE || status === CampusStatus.SUSPENDED;');
     });
 
+    it('generates false return for boolean method with no true values', function () {
+        $enum = new EnumDefinition(
+            fqcn: 'App\Enums\CampusStatus',
+            name: 'CampusStatus',
+            isBacked: true,
+            backingType: 'string',
+            cases: [
+                new EnumCaseDefinition('ACTIVE', 'active'),
+                new EnumCaseDefinition('INACTIVE', 'inactive'),
+            ],
+            methods: [
+                new EnumMethodDefinition('isSomethingImpossible', ['bool'], 'boolean', [
+                    'ACTIVE' => false,
+                    'INACTIVE' => false,
+                ]),
+            ],
+        );
+
+        $output = $this->generator->generate($enum);
+
+        expect($output)
+            ->toContain('isSomethingImpossible(status: CampusStatus): boolean {')
+            ->toContain('return false;');
+    });
+
+    it('formats mixed values using switch including booleans and fallbacks', function () {
+        $enum = new EnumDefinition(
+            fqcn: 'App\Enums\MixedStatus',
+            name: 'MixedStatus',
+            isBacked: true,
+            backingType: 'string',
+            cases: [
+                new EnumCaseDefinition('YES', 'yes'),
+                new EnumCaseDefinition('NO', 'no'),
+                new EnumCaseDefinition('UNKNOWN', 'unknown'),
+            ],
+            methods: [
+                new EnumMethodDefinition('isMixed', ['mixed'], 'boolean | null', [
+                    'YES' => true,
+                    'NO' => false,
+                    'UNKNOWN' => [],  // Should fallback to null
+                ]),
+            ],
+        );
+
+        $output = $this->generator->generate($enum);
+
+        expect($output)
+            ->toContain('case MixedStatus.YES:')
+            ->toContain('return true;')
+            ->toContain('case MixedStatus.NO:')
+            ->toContain('return false;')
+            ->toContain('case MixedStatus.UNKNOWN:')
+            ->toContain('return null;');
+    });
+
     it('generates integer backed enum as const', function () {
         $enum = new EnumDefinition(
             fqcn: 'App\Enums\HttpStatus',
