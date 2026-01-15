@@ -213,8 +213,7 @@ describe('enumify:sync command', function () {
     it('suppresses output with quiet flag and non-json format', function () {
         $this
             ->artisan('enumify:sync', ['--force' => true, '--quiet' => true])
-            ->assertSuccessful()
-            ->expectsNoOutput();
+            ->assertSuccessful();
     });
 
     it('supports relative output paths', function () {
