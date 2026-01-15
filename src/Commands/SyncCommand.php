@@ -98,7 +98,6 @@ class SyncCommand extends Command
         $this->discovery = new EnumDiscoveryService;
 
         $this->generator = new TypeScriptGenerator(
-            exportStyle: config('enumify.naming.export_style', 'enum'),
             generateUnionTypes: config('enumify.features.generate_union_types', true),
             generateLabelMaps: config('enumify.features.generate_label_maps', true),
             generateMethodMaps: config('enumify.features.generate_method_maps', true),

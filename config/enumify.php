@@ -32,10 +32,6 @@ return [
         // camel: orderStatus.ts
         // pascal: OrderStatus.ts
         'file_case' => 'kebab',
-        // Export style: 'enum' | 'const'
-        // enum: export enum OrderStatus { ... }
-        // const: export const OrderStatus = { ... } as const;
-        'export_style' => 'enum',
     ],
 
     /*

@@ -351,7 +351,6 @@ return [
 
     'naming' => [
         'file_case' => 'kebab',
-        'export_style' => 'enum',
     ],
 
     'features' => [

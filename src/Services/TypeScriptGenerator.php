@@ -13,7 +13,6 @@ use DevWizardHQ\Enumify\Data\EnumMethodDefinition;
 class TypeScriptGenerator
 {
     public function __construct(
-        private readonly string $exportStyle = 'enum',
         private readonly bool $generateUnionTypes = true,
         private readonly bool $generateLabelMaps = true,
         private readonly bool $generateMethodMaps = true,
@@ -45,9 +44,11 @@ class TypeScriptGenerator
         $lines[] = '';
 
         // 2. Export type definition
-        $lines[] = "export type {$enum->name} =";
-        $lines[] = "  typeof {$enum->name}[keyof typeof {$enum->name}];";
-        $lines[] = '';
+        if ($this->generateUnionTypes) {
+            $lines[] = "export type {$enum->name} =";
+            $lines[] = "  typeof {$enum->name}[keyof typeof {$enum->name}];";
+            $lines[] = '';
+        }
 
         // 3. Export Utils object (methods)
         $lines = array_merge($lines, $this->generateUtilsObject($enum));
@@ -101,13 +102,15 @@ class TypeScriptGenerator
         }
 
         // Generate label() method if labels exist
-        if ($enum->hasLabels()) {
+        if ($this->generateLabelMaps && $enum->hasLabels()) {
             $lines = array_merge($lines, $this->generateLabelMethod($enum));
         }
 
         // Generate custom methods from PHP
-        foreach ($enum->methods as $method) {
-            $lines = array_merge($lines, $this->generateCustomMethod($enum, $method));
+        if ($this->generateMethodMaps) {
+            foreach ($enum->methods as $method) {
+                $lines = array_merge($lines, $this->generateCustomMethod($enum, $method));
+            }
         }
 
         // Generate options() method
