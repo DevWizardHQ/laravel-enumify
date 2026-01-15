@@ -13,9 +13,6 @@ beforeEach(function () {
 });
 
 afterEach(function () {
-    // Close Mockery to properly restore error handlers after File:: facade mocks
-    Mockery::close();
-
     if (is_dir($this->outputPath)) {
         $files = array_diff(scandir($this->outputPath), ['.', '..']);
         foreach ($files as $file) {
