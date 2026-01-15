@@ -299,6 +299,8 @@ function MyComponent() {
 
 This ensures your enums are fully localized on the frontend while respecting React's Rules of Hooks.
 
+**Note:** If you enable localization mode but disable label generation (`generate_label_maps` set to `false`), the generator will create hooks/composables without the `useLocalizer` import, since labels are the only feature that uses localization. In this case, you'll get a hook that only contains custom methods and the `options()` method.
+
 ## Method Conversion Rules
 
 Enumify will convert methods into TypeScript maps when they meet these rules:
