@@ -223,11 +223,6 @@ if (CampusStatusUtils.isActive(status)) {
 const options = CampusStatusUtils.options();
 ```
 
-// Get all options (e.g., for a dropdown)
-const options = CampusStatusUtils.options();
-
-````
-
 ### Localization
 
 Enumify supports automatic localization for React and Vue applications using `@devwizard/laravel-localizer-react` or `@devwizard/laravel-localizer-vue`.
@@ -238,7 +233,7 @@ Enumify supports automatic localization for React and Vue applications using `@d
 'localization' => [
     'mode' => 'react', // 'react' | 'vue' | 'none'
 ],
-````
+```
 
 2. **Generated TypeScript** will export a **use{Enum}Utils** hook instead of a static object:
 
