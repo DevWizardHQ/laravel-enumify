@@ -107,9 +107,10 @@ describe('enumify:sync command', function () {
         $content = file_get_contents($this->outputPath.'/order-status.ts');
 
         expect($content)
-            ->toContain('export enum OrderStatus {')
-            ->toContain('PENDING = "pending",')
-            ->toContain('SHIPPED = "shipped",');
+            ->toContain('export const OrderStatus = {')
+            ->toContain("  PENDING: 'pending',")
+            ->toContain("  SHIPPED: 'shipped',")
+            ->toContain('} as const;');
     });
 
     it('generates files with labels', function () {
@@ -120,8 +121,9 @@ describe('enumify:sync command', function () {
         $content = file_get_contents($this->outputPath.'/payment-method.ts');
 
         expect($content)
-            ->toContain('export const PaymentMethodLabels: Record<PaymentMethod, string> = {')
-            ->toContain('[PaymentMethod.CREDIT_CARD]: "Credit Card",');
+            ->toContain('label(status: PaymentMethod): string {')
+            ->toContain('case PaymentMethod.CREDIT_CARD:')
+            ->toContain("return 'Credit Card';");
     });
 
     it('generates files with custom method maps', function () {
@@ -132,10 +134,10 @@ describe('enumify:sync command', function () {
         $content = file_get_contents($this->outputPath.'/campus-status.ts');
 
         expect($content)
-            ->toContain('export const CampusStatusColors: Record<CampusStatus, string> = {')
-            ->toContain('[CampusStatus.ACTIVE]: "green",')
-            ->toContain('export const CampusStatusIsActive: Record<CampusStatus, boolean> = {')
-            ->toContain('export function isActive(value: CampusStatus): boolean {');
+            ->toContain('color(status: CampusStatus): string {')
+            ->toContain("return 'green';")
+            ->toContain('isActive(status: CampusStatus): boolean {')
+            ->toContain('return status === CampusStatus.ACTIVE;');
     });
 
     it('creates .gitkeep file', function () {
