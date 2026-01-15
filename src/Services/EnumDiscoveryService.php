@@ -58,7 +58,7 @@ class EnumDiscoveryService
 
         foreach ($paths as $path) {
             // Support both absolute paths (for testing) and relative paths
-            $absolutePath = str_starts_with($path, '/') || str_starts_with($path, '\\')
+            $absolutePath = $this->isAbsolutePath($path)
                 ? $path
                 : base_path($path);
 
@@ -99,6 +99,18 @@ class EnumDiscoveryService
         usort($enums, fn (EnumDefinition $a, EnumDefinition $b) => strcmp($a->fqcn, $b->fqcn));
 
         return $enums;
+    }
+
+    /**
+     * Determine if the path is absolute (supports Windows drive letters).
+     */
+    private function isAbsolutePath(string $path): bool
+    {
+        if (str_starts_with($path, '/') || str_starts_with($path, '\\')) {
+            return true;
+        }
+
+        return (bool) preg_match('/^[A-Za-z]:[\\\\\\/]/', $path);
     }
 
     /**

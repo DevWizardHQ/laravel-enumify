@@ -91,7 +91,7 @@ class SyncCommand extends Command
         $outputPath = config('enumify.paths.output', 'resources/js/enums');
 
         // Support both absolute paths (for testing) and relative paths
-        $absoluteOutput = str_starts_with($outputPath, '/') || str_starts_with($outputPath, '\\')
+        $absoluteOutput = $this->isAbsolutePath($outputPath)
             ? $outputPath
             : base_path($outputPath);
 
@@ -134,6 +134,18 @@ class SyncCommand extends Command
         }
 
         return array_values($enums);
+    }
+
+    /**
+     * Determine if the path is absolute (supports Windows drive letters).
+     */
+    private function isAbsolutePath(string $path): bool
+    {
+        if (str_starts_with($path, '/') || str_starts_with($path, '\\')) {
+            return true;
+        }
+
+        return (bool) preg_match('/^[A-Za-z]:[\\\\\\/]/', $path);
     }
 
     /**

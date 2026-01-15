@@ -38,7 +38,7 @@ describe('ManifestManager', function () {
 
     it('writes and reads manifest data', function () {
         $enum = new EnumDefinition(
-            fqcn: 'App\\Enums\\Status',
+            fqcn: 'App\Enums\Status',
             name: 'Status',
             isBacked: true,
             backingType: 'string',
@@ -53,14 +53,14 @@ describe('ManifestManager', function () {
         expect($manifest)
             ->toHaveKey('enums')
             ->and($manifest['enums'][0]['fqcn'])
-            ->toBe('App\\Enums\\Status')
+            ->toBe('App\Enums\Status')
             ->and($manifest['version'])
             ->toBe('1.0.0');
     });
 
     it('returns true when no matching manifest entry exists', function () {
         $enum = new EnumDefinition(
-            fqcn: 'App\\Enums\\Status',
+            fqcn: 'App\Enums\Status',
             name: 'Status',
             isBacked: true,
             backingType: 'string',
@@ -70,7 +70,7 @@ describe('ManifestManager', function () {
         $entry = $this->manager->buildEntry($enum, 'status', 'content');
         $this->manager->write([$entry], '1.0.0');
 
-        expect($this->manager->needsRegeneration('App\\Enums\\Missing', 'hash'))->toBeTrue();
+        expect($this->manager->needsRegeneration('App\Enums\Missing', 'hash'))->toBeTrue();
     });
 
     it('cleans temp files when write fails', function () {
