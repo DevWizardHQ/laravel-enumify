@@ -6,6 +6,7 @@ namespace DevWizardHQ\Enumify\Tests;
 
 use DevWizardHQ\Enumify\EnumifyServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Foundation\Bootstrap\HandleExceptions;
 use Orchestra\Testbench\TestCase as Orchestra;
 
 class TestCase extends Orchestra
@@ -63,6 +64,9 @@ class TestCase extends Orchestra
     protected function tearDown(): void
     {
         $this->cleanOutput();
+        if (class_exists(HandleExceptions::class)) {
+            HandleExceptions::flushState($this);
+        }
         parent::tearDown();
     }
 }

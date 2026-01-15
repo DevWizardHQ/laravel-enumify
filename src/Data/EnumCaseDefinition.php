@@ -21,14 +21,13 @@ final readonly class EnumCaseDefinition
     ) {}
 
     /**
-     * Get the TypeScript-friendly name (PascalCase).
+     * Get the TypeScript-friendly name.
+     * Preserves the original casing from PHP enum case names.
      */
     public function getTypeScriptName(): string
     {
-        // Convert SCREAMING_SNAKE_CASE to PascalCase
-        $parts = explode('_', strtolower($this->name));
-
-        return implode('', array_map(ucfirst(...), $parts));
+        // Simply return the name as-is to preserve the original casing
+        return $this->name;
     }
 
     /**

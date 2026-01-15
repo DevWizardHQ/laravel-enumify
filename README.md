@@ -11,26 +11,26 @@ Laravel Enumify keeps frontend TypeScript enums in sync with backend PHP enums a
 
 ## Features
 
-- 🔄 **Automatic Sync** – Runs during `npm run dev` and `npm run build` via the Vite plugin
-- 🧭 **Wayfinder-Level DX** – One install command to scaffold everything
-- 🏷️ **Labels Support** – `label()` or static `labels()` become TS maps
-- 🎨 **Custom Methods** – Public zero-arg scalar methods become TS maps
-- 📦 **Barrel Exports** – Optional `index.ts` for clean imports
-- ⚡ **Smart Caching** – Only regenerate changed files using hashes
-- 🔒 **Git-Friendly** – `.gitkeep` and strict `.gitignore` patterns supported
+-   🔄 **Automatic Sync** – Runs during `npm run dev` and `npm run build` via the Vite plugin
+-   🧭 **Wayfinder-Level DX** – One install command to scaffold everything
+-   🏷️ **Labels Support** – `label()` or static `labels()` become TS maps
+-   🎨 **Custom Methods** – Public zero-arg scalar methods become TS maps
+-   📦 **Barrel Exports** – Optional `index.ts` for clean imports
+-   ⚡ **Smart Caching** – Only regenerate changed files using hashes
+-   🔒 **Git-Friendly** – `.gitkeep` and strict `.gitignore` patterns supported
 
 ## Requirements
 
-- PHP 8.2+
-- Laravel 10, 11, or 12
-- Node.js 18+
-- Vite 4, 5, 6, or 7
+-   PHP 8.4+
+-   Laravel 12
+-   Node.js 18+
+-   Vite 4, 5, 6, or 7
 
 ## Package Links
 
-- Composer (Packagist): https://packagist.org/packages/devwizardhq/laravel-enumify
-- NPM: https://www.npmjs.com/package/@devwizard/vite-plugin-enumify
-- Repository: https://github.com/devwizardhq/laravel-enumify
+-   Composer (Packagist): https://packagist.org/packages/devwizardhq/laravel-enumify
+-   NPM: https://www.npmjs.com/package/@devwizard/vite-plugin-enumify
+-   Repository: https://github.com/devwizardhq/laravel-enumify
 
 ## Installation
 
@@ -48,10 +48,10 @@ php artisan enumify:install
 
 This will:
 
-- Create `resources/js/enums/`
-- Create `resources/js/enums/.gitkeep`
-- Print the `.gitignore` lines to add (and offer to append them)
-- Offer to publish the config file
+-   Create `resources/js/enums/`
+-   Create `resources/js/enums/.gitkeep`
+-   Print the `.gitignore` lines to add (and offer to append them)
+-   Offer to publish the config file
 
 ### 3) Add the `.gitignore` rules
 
@@ -73,15 +73,15 @@ yarn add -D @devwizard/vite-plugin-enumify
 ### 5) Add the plugin to Vite
 
 ```ts
-import { defineConfig } from 'vite';
-import laravel from 'laravel-vite-plugin';
-import enumify from '@devwizard/vite-plugin-enumify';
+import { defineConfig } from "vite";
+import laravel from "laravel-vite-plugin";
+import enumify from "@devwizard/vite-plugin-enumify";
 
 export default defineConfig({
     plugins: [
         enumify(),
         laravel({
-            input: ['resources/js/app.ts'],
+            input: ["resources/js/app.ts"],
             refresh: true,
         }),
     ],
@@ -112,10 +112,10 @@ enum OrderStatus: string
 ```ts
 // resources/js/enums/order-status.ts
 export enum OrderStatus {
-    Pending = 'pending',
-    Processing = 'processing',
-    Shipped = 'shipped',
-    Delivered = 'delivered',
+    PENDING = "pending",
+    PROCESSING = "processing",
+    SHIPPED = "shipped",
+    DELIVERED = "delivered",
 }
 
 export type OrderStatusValue = `${OrderStatus}`;
@@ -145,15 +145,15 @@ enum PaymentMethod: string
 
 ```ts
 export enum PaymentMethod {
-    CreditCard = 'credit_card',
-    BankTransfer = 'bank_transfer',
-    Paypal = 'paypal',
+    CREDIT_CARD = "credit_card",
+    BANK_TRANSFER = "bank_transfer",
+    PAYPAL = "paypal",
 }
 
 export const PaymentMethodLabels: Record<PaymentMethod, string> = {
-    [PaymentMethod.CreditCard]: 'Credit Card',
-    [PaymentMethod.BankTransfer]: 'Bank Transfer',
-    [PaymentMethod.Paypal]: 'PayPal',
+    [PaymentMethod.CREDIT_CARD]: "Credit Card",
+    [PaymentMethod.BANK_TRANSFER]: "Bank Transfer",
+    [PaymentMethod.PAYPAL]: "PayPal",
 };
 ```
 
@@ -204,29 +204,29 @@ enum CampusStatus: string
 
 ```ts
 export enum CampusStatus {
-    Active = 'active',
-    Suspended = 'suspended',
-    Inactive = 'inactive',
+    ACTIVE = "active",
+    SUSPENDED = "suspended",
+    INACTIVE = "inactive",
 }
 
 export type CampusStatusValue = `${CampusStatus}`;
 
 export const CampusStatusLabels: Record<CampusStatus, string> = {
-    [CampusStatus.Active]: 'Active',
-    [CampusStatus.Suspended]: 'Suspended',
-    [CampusStatus.Inactive]: 'Inactive',
+    [CampusStatus.ACTIVE]: "Active",
+    [CampusStatus.SUSPENDED]: "Suspended",
+    [CampusStatus.INACTIVE]: "Inactive",
 };
 
 export const CampusStatusColors: Record<CampusStatus, string> = {
-    [CampusStatus.Active]: 'green',
-    [CampusStatus.Suspended]: 'red',
-    [CampusStatus.Inactive]: 'gray',
+    [CampusStatus.ACTIVE]: "green",
+    [CampusStatus.SUSPENDED]: "red",
+    [CampusStatus.INACTIVE]: "gray",
 };
 
 export const CampusStatusIsActive: Record<CampusStatus, boolean> = {
-    [CampusStatus.Active]: true,
-    [CampusStatus.Suspended]: false,
-    [CampusStatus.Inactive]: false,
+    [CampusStatus.ACTIVE]: true,
+    [CampusStatus.SUSPENDED]: false,
+    [CampusStatus.INACTIVE]: false,
 };
 
 export function isActive(value: CampusStatus): boolean {
@@ -234,21 +234,26 @@ export function isActive(value: CampusStatus): boolean {
 }
 
 export const CampusStatusBadges: Record<CampusStatus, string | null> = {
-    [CampusStatus.Active]: 'primary',
-    [CampusStatus.Suspended]: 'warning',
-    [CampusStatus.Inactive]: null,
+    [CampusStatus.ACTIVE]: "primary",
+    [CampusStatus.SUSPENDED]: "warning",
+    [CampusStatus.INACTIVE]: null,
 };
 ```
 
 ### Frontend Usage
 
 ```ts
-import { CampusStatus, CampusStatusLabels, CampusStatusColors, isActive } from '@/enums';
+import {
+    CampusStatus,
+    CampusStatusLabels,
+    CampusStatusColors,
+    isActive,
+} from "@/enums";
 
-const status: CampusStatus = CampusStatus.Active;
+const status: CampusStatus = CampusStatus.ACTIVE;
 
-console.log(CampusStatusLabels[status]);
-const badgeColor = CampusStatusColors[status];
+console.log(CampusStatusLabels[status]); // 'Active'
+const badgeColor = CampusStatusColors[status]; // 'green'
 
 if (isActive(status)) {
     // Allow access
@@ -259,11 +264,11 @@ if (isActive(status)) {
 
 Enumify will convert methods into TypeScript maps when they meet these rules:
 
-- Public, non-static, zero-argument methods only
-- Return types must be `string`, `int`, `float`, `bool`, or nullable/union combinations of those
-- Methods without return types or unsupported return types are skipped
-- Map naming: `EnumName + MethodName` (pluralized for non-boolean methods)
-- Boolean methods also generate a helper function
+-   Public, non-static, zero-argument methods only
+-   Return types must be `string`, `int`, `float`, `bool`, or nullable/union combinations of those
+-   Methods without return types or unsupported return types are skipped
+-   Map naming: `EnumName + MethodName` (pluralized for non-boolean methods)
+-   Boolean methods also generate a helper function
 
 Labels are handled separately using `label()` or `labels()`.
 
@@ -338,9 +343,9 @@ return [
 
 ## Generated Output
 
-- `resources/js/enums/*.ts` – one file per enum
-- `resources/js/enums/index.ts` – barrel exports (optional)
-- `resources/js/enums/.enumify-manifest.json` – hashes, timestamps, versions
+-   `resources/js/enums/*.ts` – one file per enum
+-   `resources/js/enums/index.ts` – barrel exports (optional)
+-   `resources/js/enums/.enumify-manifest.json` – hashes, timestamps, versions
 
 The generator uses atomic writes and skips unchanged files for speed.
 
@@ -348,20 +353,20 @@ The generator uses atomic writes and skips unchanged files for speed.
 
 This repo contains two packages:
 
-- `packages/laravel-enumify` (Composer)
-- `packages/vite-plugin-enumify` (NPM)
+-   `packages/laravel-enumify` (Composer)
+-   `packages/vite-plugin-enumify` (NPM)
 
 ### Composer path repository
 
 ```json
 {
-  "repositories": [
-    {
-      "type": "path",
-      "url": "./packages/laravel-enumify",
-      "options": { "symlink": true }
-    }
-  ]
+    "repositories": [
+        {
+            "type": "path",
+            "url": "./packages/laravel-enumify",
+            "options": { "symlink": true }
+        }
+    ]
 }
 ```
 
@@ -379,10 +384,10 @@ npm install --save-dev ./packages/vite-plugin-enumify
 
 Recommended workflow for both packages:
 
-1) Create a feature branch from `main`  
-2) Make changes with focused commits  
-3) Run tests/builds locally  
-4) Open a PR and ensure CI passes  
+1. Create a feature branch from `main`
+2. Make changes with focused commits
+3. Run tests/builds locally
+4. Open a PR and ensure CI passes
 
 Release tip: tag releases after merging to `main`, then publish to Packagist and NPM.
 
@@ -390,14 +395,14 @@ Release tip: tag releases after merging to `main`, then publish to Packagist and
 
 Suggested pipelines:
 
-- PHP: `composer test` and `composer test-coverage`
-- Node: `pnpm run build && pnpm run typecheck`
+-   PHP: `composer test` and `composer test-coverage`
+-   Node: `pnpm run build && pnpm run typecheck`
 
 ## Troubleshooting
 
-- **Missing enums folder**: run `php artisan enumify:install` or ensure `resources/js/enums/.gitkeep` exists.
-- **Imports fail during build**: ensure the Vite plugin is enabled and runs before `laravel()`.
-- **Enums not discovered**: check `config/enumify.php` paths and include/exclude filters.
+-   **Missing enums folder**: run `php artisan enumify:install` or ensure `resources/js/enums/.gitkeep` exists.
+-   **Imports fail during build**: ensure the Vite plugin is enabled and runs before `laravel()`.
+-   **Enums not discovered**: check `config/enumify.php` paths and include/exclude filters.
 
 ## Changelog
 
