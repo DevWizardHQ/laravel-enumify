@@ -115,13 +115,11 @@ class TypeScriptGenerator
         if (! $this->isStaticMode()) {
             // Generate as a Hook / Composable function
             $lines[] = "export function use{$enum->name}Utils() {";
-            
             // Only add useLocalizer if labels will be generated
             if ($this->generateLabelMaps && $enum->hasLabels()) {
                 $lines[] = '    const { __ } = useLocalizer();';
                 $lines[] = '';
             }
-            
             $lines[] = '    return {';
         } else {
             // Generate as a static object

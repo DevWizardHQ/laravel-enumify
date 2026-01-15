@@ -369,6 +369,7 @@ describe('TypeScriptGenerator', function () {
         expect($output)
             ->toContain("import { useLocalizer } from '@devwizard/laravel-localizer-vue';")
             ->toContain('export function useCampusStatusUtils() {')
+            ->toContain('    const { __ } = useLocalizer();')
             ->toContain('        color(status: CampusStatus): string {')
             ->toContain('            switch (status) {')
             ->toContain('                case CampusStatus.ACTIVE:')
