@@ -10,6 +10,7 @@ use DevWizardHQ\Enumify\Data\EnumDefinition;
 use DevWizardHQ\Enumify\Data\EnumMethodDefinition;
 use Illuminate\Support\Facades\File;
 use ReflectionEnum;
+use ReflectionEnumBackedCase;
 use ReflectionMethod;
 use ReflectionNamedType;
 use ReflectionType;
@@ -203,7 +204,9 @@ class EnumDiscoveryService
 
         foreach ($enumCases as $case) {
             $caseName = $case->getName();
-            $caseValue = $isBacked ? $case->getBackingValue() : null;
+            $caseValue = ($isBacked && $case instanceof ReflectionEnumBackedCase)
+                ? $case->getBackingValue()
+                : null;
             $caseInstance = $case->getValue();
 
             // Try to get label
@@ -386,7 +389,9 @@ class EnumDiscoveryService
         }
 
         try {
-            $labels = $reflection->getName()::labels();
+            $enumClass = $reflection->getName();
+            /** @var array<string|int, string>|mixed $labels */
+            $labels = $enumClass::labels();  // @phpstan-ignore staticMethod.notFound
 
             if (is_array($labels)) {
                 $normalized = [];

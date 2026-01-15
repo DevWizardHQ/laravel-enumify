@@ -73,7 +73,7 @@ class SyncCommand extends Command
 
         // Update manifest
         if (! $this->option('dry-run')) {
-            $this->updateManifest($results['entries'] ?? []);
+            $this->updateManifest($results['entries']);
 
             // Clean orphaned files
             $this->cleanOrphanedFiles($enums);
@@ -287,14 +287,14 @@ class SyncCommand extends Command
             $this->line(json_encode([
                 'generated' => $results['generated'],
                 'skipped' => $results['skipped'],
-                'total' => ($results['generated'] ?? 0) + ($results['skipped'] ?? 0),
+                'total' => $results['generated'] + $results['skipped'],
                 'dry_run' => (bool) $this->option('dry-run'),
             ], JSON_PRETTY_PRINT));
 
             return;
         }
 
-        $total = ($results['generated'] ?? 0) + ($results['skipped'] ?? 0);
+        $total = $results['generated'] + $results['skipped'];
 
         $this->components->bulletList([
             "Total enums: <fg=cyan>{$total}</>",

@@ -149,15 +149,13 @@ class InstallCommand extends Command
                     $additions[] = $pattern2;
                 }
 
-                if (! empty($additions)) {
-                    $newContent = rtrim($content)."\n\n# Laravel Enumify\n".implode("\n", $additions)."\n";
-                    File::put($gitignorePath, $newContent);
+                $newContent = rtrim($content)."\n\n# Laravel Enumify\n".implode("\n", $additions)."\n";
+                File::put($gitignorePath, $newContent);
 
-                    $this->components->twoColumnDetail(
-                        '.gitignore patterns',
-                        '<fg=green>Added</>'
-                    );
-                }
+                $this->components->twoColumnDetail(
+                    '.gitignore patterns',
+                    '<fg=green>Added</>'
+                );
             }
         }
     }
