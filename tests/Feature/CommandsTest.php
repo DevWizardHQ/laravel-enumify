@@ -197,6 +197,8 @@ describe('enumify:sync command', function () {
         $this
             ->artisan('enumify:sync', ['--force' => true])
             ->assertSuccessful();
+
+        @rmdir($emptyDir);
     });
 
     it('handles empty enum discovery with quiet flag', function () {
@@ -208,6 +210,8 @@ describe('enumify:sync command', function () {
         $this
             ->artisan('enumify:sync', ['--force' => true, '--quiet' => true])
             ->assertSuccessful();
+
+        @rmdir($emptyDir);
     });
 
     it('suppresses output with quiet flag and non-json format', function () {
