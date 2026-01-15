@@ -222,6 +222,75 @@ if (CampusStatusUtils.isActive(status)) {
 const options = CampusStatusUtils.options();
 ```
 
+// Get all options (e.g., for a dropdown)
+const options = CampusStatusUtils.options();
+
+````
+
+### Localization
+
+Enumify supports automatic localization for React and Vue applications using `@devwizard/laravel-localizer-react` or `@devwizard/laravel-localizer-vue`.
+
+1. **Configure the mode** in `config/enumify.php`:
+
+```php
+'localization' => [
+    'mode' => 'react', // 'react' | 'vue' | 'none'
+],
+````
+
+2. **Generated TypeScript** will export a **use{Enum}Utils** hook instead of a static object:
+
+```ts
+import { useLocalizer } from "@devwizard/laravel-localizer-react";
+
+export const CampusStatus = {
+    ACTIVE: "active",
+    // ...
+} as const;
+
+/**
+ * React Hook for CampusStatus utils
+ */
+export function useCampusStatusUtils() {
+    const { __ } = useLocalizer();
+
+    return {
+        label(status: CampusStatus): string {
+            switch (status) {
+                case CampusStatus.ACTIVE:
+                    return __("Active");
+                // ...
+            }
+        },
+
+        options(): CampusStatus[] {
+            return Object.values(CampusStatus);
+        },
+    };
+}
+```
+
+3. **Usage in Components**:
+
+```tsx
+import { CampusStatus, useCampusStatusUtils } from "@/enums/campus-status";
+
+function MyComponent() {
+    const { label, options } = useCampusStatusUtils();
+
+    return (
+        <select>
+            {options().map((status) => (
+                <option value={status}>{label(status)}</option>
+            ))}
+        </select>
+    );
+}
+```
+
+This ensures your enums are fully localized on the frontend while respecting React's Rules of Hooks.
+
 ## Method Conversion Rules
 
 Enumify will convert methods into TypeScript maps when they meet these rules:

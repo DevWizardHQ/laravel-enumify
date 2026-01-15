@@ -198,6 +198,52 @@ describe('TypeScriptGenerator', function () {
         $output = $this->generator->generate($enum);
         expect($output)->toContain("QUOTE: 'quo\'te'");
     });
+
+    it('generates localization hook and wrappers for React', function () {
+        $generator = new TypeScriptGenerator(localizationMode: 'react');
+
+        $enum = new EnumDefinition(
+            fqcn: 'App\Enums\Status',
+            name: 'Status',
+            isBacked: true,
+            backingType: 'string',
+            cases: [
+                new EnumCaseDefinition('ACTIVE', 'active', 'Active Status'),
+            ],
+        );
+
+        $output = $generator->generate($enum);
+
+        expect($output)
+            ->toContain("import { useLocalizer } from '@devwizard/laravel-localizer-react';")
+            ->toContain('export function useStatusUtils() {')
+            ->toContain('    const { __ } = useLocalizer();')
+            ->toContain('    return {')
+            ->toContain("                    return __('Active Status');");
+    });
+
+    it('generates localization hook and wrappers for Vue', function () {
+        $generator = new TypeScriptGenerator(localizationMode: 'vue');
+
+        $enum = new EnumDefinition(
+            fqcn: 'App\Enums\Status',
+            name: 'Status',
+            isBacked: true,
+            backingType: 'string',
+            cases: [
+                new EnumCaseDefinition('ACTIVE', 'active', 'Active Status'),
+            ],
+        );
+
+        $output = $generator->generate($enum);
+
+        expect($output)
+            ->toContain("import { useLocalizer } from '@devwizard/laravel-localizer-vue';")
+            ->toContain('export function useStatusUtils() {')
+            ->toContain('    const { __ } = useLocalizer();')
+            ->toContain('    return {')
+            ->toContain("                    return __('Active Status');");
+    });
 });
 
 describe('TypeScriptGenerator barrel', function () {

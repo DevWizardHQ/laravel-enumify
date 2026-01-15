@@ -66,6 +66,22 @@ return [
 
     /*
      * |--------------------------------------------------------------------------
+     * | Localization
+     * |--------------------------------------------------------------------------
+     * |
+     * | Configure how generated enums handle localization.
+     * |
+     */
+    'localization' => [
+        // Mode: 'none' | 'react' | 'vue'
+        // none: No localization (default)
+        // react: Uses @devwizard/laravel-localizer-react
+        // vue: Uses @devwizard/laravel-localizer-vue
+        'mode' => 'none',
+    ],
+
+    /*
+     * |--------------------------------------------------------------------------
      * | Runtime Configuration
      * |--------------------------------------------------------------------------
      * |

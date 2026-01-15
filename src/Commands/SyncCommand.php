@@ -102,6 +102,7 @@ class SyncCommand extends Command
             generateUnionTypes: config('enumify.features.generate_union_types', true),
             generateLabelMaps: config('enumify.features.generate_label_maps', true),
             generateMethodMaps: config('enumify.features.generate_method_maps', true),
+            localizationMode: config('enumify.localization.mode', 'none'),
         );
 
         $this->writer = new FileWriter($absoluteOutput);
