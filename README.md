@@ -3,7 +3,8 @@
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/devwizardhq/laravel-enumify.svg?style=flat-square)](https://packagist.org/packages/devwizardhq/laravel-enumify)
 [![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/devwizardhq/laravel-enumify/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/devwizardhq/laravel-enumify/actions?query=workflow%3Arun-tests+branch%3Amain)
 [![Total Downloads](https://img.shields.io/packagist/dt/devwizardhq/laravel-enumify.svg?style=flat-square)](https://packagist.org/packages/devwizardhq/laravel-enumify)
-[![NPM](https://img.shields.io/npm/v/@devwizard/vite-plugin-enumify.svg?style=flat-square)](https://www.npmjs.com/package/@devwizard/vite-plugin-enumify)
+[![NPM Version](https://img.shields.io/npm/v/@devwizard/vite-plugin-enumify.svg?style=flat-square)](https://www.npmjs.com/package/@devwizard/vite-plugin-enumify)
+[![NPM Downloads](https://img.shields.io/npm/dt/@devwizard/vite-plugin-enumify.svg?style=flat-square)](https://www.npmjs.com/package/@devwizard/vite-plugin-enumify)
 
 **Auto-generate TypeScript enums and maps from Laravel PHP enums, with Vite integration.**
 
