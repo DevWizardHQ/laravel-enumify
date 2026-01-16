@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.0.0 - 2026-01-16
+
+### What's Changed
+
+* feat: refactor ts output and install by @iqbalhasandev in https://github.com/DevWizardHQ/laravel-enumify/pull/5
+* Fix indentation, validation, and formatting issues in TypeScript generator by @Copilot in https://github.com/DevWizardHQ/laravel-enumify/pull/7
+* Add localization support for generated TypeScript enums by @Copilot in https://github.com/DevWizardHQ/laravel-enumify/pull/8
+* feat: Add localization support for generated TypeScript enums, allowing integration with React/Vue localizer libraries and generating utility hooks. by @iqbalhasandev in https://github.com/DevWizardHQ/laravel-enumify/pull/6
+
+**Full Changelog**: https://github.com/DevWizardHQ/laravel-enumify/compare/v0.2.0...v1.0.0
+
 ## v0.2.0 - 2026-01-15
 
 ### What's Changed
