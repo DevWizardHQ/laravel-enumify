@@ -104,4 +104,83 @@ describe('enumify:install command', function () {
             ->expectsConfirmation('Would you like to install the @devwizard/vite-plugin-enumify plugin using npm?', 'no')
             ->assertSuccessful();
     });
+    it('skips gitignore update if .gitignore does not exist', function () {
+        $gitignorePath = $this->tempBasePath.'/.gitignore';
+        if (File::exists($gitignorePath)) {
+            File::delete($gitignorePath);
+        }
+
+        $this
+            ->artisan('enumify:install')
+            ->expectsConfirmation('Would you like to install the @devwizard/vite-plugin-enumify plugin using npm?', 'no')
+            ->assertSuccessful();
+
+        expect(File::exists($gitignorePath))->toBeFalse();
+    });
+
+    it('installs dependency using detected package manager (pnpm)', function () {
+        File::put($this->tempBasePath.'/.gitignore', "# Base\n");
+        File::put($this->tempBasePath.'/pnpm-lock.yaml', '');
+
+        Process::fake([
+            'pnpm add -D @devwizard/vite-plugin-enumify' => Process::result(),
+        ]);
+
+        $this
+            ->artisan('enumify:install')
+            ->expectsConfirmation('Would you like to install the @devwizard/vite-plugin-enumify plugin using pnpm?', 'yes')
+            ->assertSuccessful();
+
+        Process::assertRan('pnpm add -D @devwizard/vite-plugin-enumify');
+    });
+
+    it('installs dependency using detected package manager (yarn)', function () {
+        File::put($this->tempBasePath.'/.gitignore', "# Base\n");
+        File::put($this->tempBasePath.'/yarn.lock', '');
+
+        Process::fake([
+            'yarn add -D @devwizard/vite-plugin-enumify' => Process::result(),
+        ]);
+
+        $this
+            ->artisan('enumify:install')
+            ->expectsConfirmation('Would you like to install the @devwizard/vite-plugin-enumify plugin using yarn?', 'yes')
+            ->assertSuccessful();
+
+        Process::assertRan('yarn add -D @devwizard/vite-plugin-enumify');
+    });
+
+    it('installs dependency using detected package manager (bun)', function () {
+        File::put($this->tempBasePath.'/.gitignore', "# Base\n");
+        File::put($this->tempBasePath.'/bun.lockb', '');
+
+        Process::fake([
+            'bun add -d @devwizard/vite-plugin-enumify' => Process::result(),
+        ]);
+
+        $this
+            ->artisan('enumify:install')
+            ->expectsConfirmation('Would you like to install the @devwizard/vite-plugin-enumify plugin using bun?', 'yes')
+            ->assertSuccessful();
+
+        Process::assertRan('bun add -d @devwizard/vite-plugin-enumify');
+    });
+
+    it('handles installation failure', function () {
+        File::put($this->tempBasePath.'/.gitignore', "# Base\n");
+
+        Process::fake([
+            '*' => Process::result(
+                output: 'Installation failed',
+                exitCode: 1
+            ),
+        ]);
+
+        $this
+            ->artisan('enumify:install')
+            ->expectsConfirmation('Would you like to install the @devwizard/vite-plugin-enumify plugin using npm?', 'yes')
+            ->assertSuccessful();
+
+        Process::assertRan(fn ($process) => str_contains($process->command, 'npm install'));
+    });
 });

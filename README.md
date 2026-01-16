@@ -3,7 +3,8 @@
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/devwizardhq/laravel-enumify.svg?style=flat-square)](https://packagist.org/packages/devwizardhq/laravel-enumify)
 [![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/devwizardhq/laravel-enumify/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/devwizardhq/laravel-enumify/actions?query=workflow%3Arun-tests+branch%3Amain)
 [![Total Downloads](https://img.shields.io/packagist/dt/devwizardhq/laravel-enumify.svg?style=flat-square)](https://packagist.org/packages/devwizardhq/laravel-enumify)
-[![NPM](https://img.shields.io/npm/v/@devwizard/vite-plugin-enumify.svg?style=flat-square)](https://www.npmjs.com/package/@devwizard/vite-plugin-enumify)
+[![NPM Version](https://img.shields.io/npm/v/@devwizard/vite-plugin-enumify.svg?style=flat-square)](https://www.npmjs.com/package/@devwizard/vite-plugin-enumify)
+[![NPM Downloads](https://img.shields.io/npm/dt/@devwizard/vite-plugin-enumify.svg?style=flat-square)](https://www.npmjs.com/package/@devwizard/vite-plugin-enumify)
 
 **Auto-generate TypeScript enums and maps from Laravel PHP enums, with Vite integration.**
 
@@ -21,8 +22,8 @@ Laravel Enumify keeps frontend TypeScript enums in sync with backend PHP enums a
 
 ## Requirements
 
--   PHP 8.4+
--   Laravel 12
+-   PHP 8.2+
+-   Laravel 10, 11, or 12
 -   Node.js 18+
 -   Vite 4, 5, 6, or 7
 
@@ -222,6 +223,84 @@ if (CampusStatusUtils.isActive(status)) {
 const options = CampusStatusUtils.options();
 ```
 
+### Localization
+
+Enumify supports automatic localization for React and Vue applications using `@devwizard/laravel-localizer-react` or `@devwizard/laravel-localizer-vue`.
+
+**Prerequisites:** Install the appropriate localization package for your framework:
+
+```bash
+# For React
+npm install @devwizard/laravel-localizer-react
+
+# For Vue
+npm install @devwizard/laravel-localizer-vue
+```
+
+1. **Configure the mode** in `config/enumify.php`:
+
+```php
+'localization' => [
+    'mode' => 'react', // 'react' | 'vue' | 'none'
+],
+```
+
+2. **Generated TypeScript** will export a **use{Enum}Utils** hook instead of a static object:
+
+```ts
+import { useLocalizer } from "@devwizard/laravel-localizer-react";
+
+export const CampusStatus = {
+    ACTIVE: "active",
+    // ...
+} as const;
+
+/**
+ * CampusStatus enum methods (PHP-style)
+ */
+export function useCampusStatusUtils() {
+    const { __ } = useLocalizer();
+
+    return {
+        label(status: CampusStatus): string {
+            switch (status) {
+                case CampusStatus.ACTIVE:
+                    return __("Active");
+                // ...
+                default:
+                    return status;
+            }
+        },
+
+        options(): CampusStatus[] {
+            return Object.values(CampusStatus);
+        },
+    };
+}
+```
+
+3. **Usage in Components**:
+
+```tsx
+import { CampusStatus, useCampusStatusUtils } from "@/enums/campus-status";
+
+function MyComponent() {
+    const { label, options } = useCampusStatusUtils();
+
+    return (
+        <select>
+            {options().map((status) => (
+                <option value={status}>{label(status)}</option>
+            ))}
+        </select>
+    );
+}
+```
+
+This ensures your enums are fully localized on the frontend while respecting React's Rules of Hooks.
+
+**Note:** If you enable localization mode but disable label generation (`generate_label_maps` set to `false`), the generator will create hooks/composables without the `useLocalizer` import, since labels are the only feature that uses localization. In this case, you'll get a hook that only contains custom methods and the `options()` method.
+
 ## Method Conversion Rules
 
 Enumify will convert methods into TypeScript maps when they meet these rules:
@@ -282,7 +361,6 @@ return [
 
     'naming' => [
         'file_case' => 'kebab',
-        'export_style' => 'enum',
     ],
 
     'features' => [

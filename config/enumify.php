@@ -32,10 +32,6 @@ return [
         // camel: orderStatus.ts
         // pascal: OrderStatus.ts
         'file_case' => 'kebab',
-        // Export style: 'enum' | 'const'
-        // enum: export enum OrderStatus { ... }
-        // const: export const OrderStatus = { ... } as const;
-        'export_style' => 'enum',
     ],
 
     /*
@@ -62,6 +58,22 @@ return [
         // Generate index.ts barrel file for easy imports
         // export * from './order-status';
         'generate_index_barrel' => true,
+    ],
+
+    /*
+     * |--------------------------------------------------------------------------
+     * | Localization
+     * |--------------------------------------------------------------------------
+     * |
+     * | Configure how generated enums handle localization.
+     * |
+     */
+    'localization' => [
+        // Mode: 'none' | 'react' | 'vue'
+        // none: No localization (default)
+        // react: Uses @devwizard/laravel-localizer-react
+        // vue: Uses @devwizard/laravel-localizer-vue
+        'mode' => 'none',
     ],
 
     /*
