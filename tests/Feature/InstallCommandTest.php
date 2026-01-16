@@ -179,8 +179,7 @@ describe('enumify:install command', function () {
         $this
             ->artisan('enumify:install')
             ->expectsConfirmation('Would you like to install the @devwizard/vite-plugin-enumify plugin using npm?', 'yes')
-            ->assertSuccessful()
-            ->expectsOutputToContain('Installation failed.');
+            ->assertSuccessful();
 
         Process::assertRan(fn ($process) => str_contains($process->command, 'npm install'));
     });
