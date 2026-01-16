@@ -169,12 +169,12 @@ describe('enumify:install command', function () {
     it('handles installation failure', function () {
         File::put($this->tempBasePath.'/.gitignore', "# Base\n");
 
-        Process::fake(function ($process) {
-            return Process::result(
+        Process::fake([
+            '*' => Process::result(
                 output: 'Installation failed',
                 exitCode: 1
-            );
-        });
+            ),
+        ]);
 
         $this
             ->artisan('enumify:install')
