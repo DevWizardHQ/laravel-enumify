@@ -34,6 +34,7 @@ final readonly class EnumDefinition
         return match ($fileCase) {
             'camel' => $this->toCamelCase($this->name),
             'pascal' => $this->name,
+            'snake' => $this->toSnakeCase($this->name),
             default => $this->toKebabCase($this->name),
         };
     }
@@ -63,6 +64,11 @@ final readonly class EnumDefinition
     private function toKebabCase(string $value): string
     {
         return strtolower((string) preg_replace('/([a-z])([A-Z])/', '$1-$2', $value));
+    }
+
+    private function toSnakeCase(string $value): string
+    {
+        return strtolower((string) preg_replace('/([a-z])([A-Z])/', '$1_$2', $value));
     }
 
     private function toCamelCase(string $value): string

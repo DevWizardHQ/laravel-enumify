@@ -22,8 +22,8 @@ Laravel Enumify keeps frontend TypeScript enums in sync with backend PHP enums a
 
 ## Requirements
 
--   PHP 8.4+
--   Laravel 12
+-   PHP 8.2+
+-   Laravel 10, 11, or 12
 -   Node.js 18+
 -   Vite 4, 5, 6, or 7
 
@@ -227,6 +227,16 @@ const options = CampusStatusUtils.options();
 
 Enumify supports automatic localization for React and Vue applications using `@devwizard/laravel-localizer-react` or `@devwizard/laravel-localizer-vue`.
 
+**Prerequisites:** Install the appropriate localization package for your framework:
+
+```bash
+# For React
+npm install @devwizard/laravel-localizer-react
+
+# For Vue
+npm install @devwizard/laravel-localizer-vue
+```
+
 1. **Configure the mode** in `config/enumify.php`:
 
 ```php
@@ -246,7 +256,7 @@ export const CampusStatus = {
 } as const;
 
 /**
- * React Hook for CampusStatus utils
+ * CampusStatus enum methods (PHP-style)
  */
 export function useCampusStatusUtils() {
     const { __ } = useLocalizer();
@@ -257,6 +267,8 @@ export function useCampusStatusUtils() {
                 case CampusStatus.ACTIVE:
                     return __("Active");
                 // ...
+                default:
+                    return status;
             }
         },
 
@@ -286,6 +298,8 @@ function MyComponent() {
 ```
 
 This ensures your enums are fully localized on the frontend while respecting React's Rules of Hooks.
+
+**Note:** If you enable localization mode but disable label generation (`generate_label_maps` set to `false`), the generator will create hooks/composables without the `useLocalizer` import, since labels are the only feature that uses localization. In this case, you'll get a hook that only contains custom methods and the `options()` method.
 
 ## Method Conversion Rules
 

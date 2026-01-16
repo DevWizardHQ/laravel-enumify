@@ -50,13 +50,15 @@ class TypeScriptGenerator
         $lines[] = '// AUTO-GENERATED — DO NOT EDIT MANUALLY';
         $lines[] = '';
 
-        // Localizer imports
-        if ($this->localizationMode === 'react') {
-            $lines[] = "import { useLocalizer } from '@devwizard/laravel-localizer-react';";
-            $lines[] = '';
-        } elseif ($this->localizationMode === 'vue') {
-            $lines[] = "import { useLocalizer } from '@devwizard/laravel-localizer-vue';";
-            $lines[] = '';
+        // Localizer imports (only if localization is enabled AND labels will be generated)
+        if ($this->localizationMode !== 'none' && $this->generateLabelMaps && $enum->hasLabels()) {
+            if ($this->localizationMode === 'react') {
+                $lines[] = "import { useLocalizer } from '@devwizard/laravel-localizer-react';";
+                $lines[] = '';
+            } elseif ($this->localizationMode === 'vue') {
+                $lines[] = "import { useLocalizer } from '@devwizard/laravel-localizer-vue';";
+                $lines[] = '';
+            }
         }
 
         // 1. Export const definition
@@ -113,8 +115,11 @@ class TypeScriptGenerator
         if (! $this->isStaticMode()) {
             // Generate as a Hook / Composable function
             $lines[] = "export function use{$enum->name}Utils() {";
-            $lines[] = '    const { __ } = useLocalizer();';
-            $lines[] = '';
+            // Only add useLocalizer if labels will be generated
+            if ($this->generateLabelMaps && $enum->hasLabels()) {
+                $lines[] = '    const { __ } = useLocalizer();';
+                $lines[] = '';
+            }
             $lines[] = '    return {';
         } else {
             // Generate as a static object

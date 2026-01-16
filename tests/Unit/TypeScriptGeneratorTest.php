@@ -12,6 +12,11 @@ beforeEach(function () {
 });
 
 describe('TypeScriptGenerator', function () {
+    it('throws exception for invalid localization mode', function () {
+        expect(fn () => new TypeScriptGenerator(localizationMode: 'invalid'))
+            ->toThrow(\InvalidArgumentException::class, 'Invalid localization mode "invalid". Allowed values are: none, react, vue.');
+    });
+
     it('generates basic const export and utils', function () {
         $enum = new EnumDefinition(
             fqcn: 'App\Enums\OrderStatus',
@@ -300,10 +305,219 @@ describe('TypeScriptGenerator', function () {
             ->toContain('    return {')
             ->toContain("                    return __('Active Status');");
     });
+
+    it('generates localization hook with custom methods for React', function () {
+        $generator = new TypeScriptGenerator(localizationMode: 'react');
+
+        $enum = new EnumDefinition(
+            fqcn: 'App\Enums\CampusStatus',
+            name: 'CampusStatus',
+            isBacked: true,
+            backingType: 'string',
+            cases: [
+                new EnumCaseDefinition('ACTIVE', 'active', 'Active'),
+                new EnumCaseDefinition('INACTIVE', 'inactive', 'Inactive'),
+            ],
+            methods: [
+                new EnumMethodDefinition('color', ['string'], 'string', [
+                    'ACTIVE' => 'green',
+                    'INACTIVE' => 'gray',
+                ]),
+                new EnumMethodDefinition('isActive', ['bool'], 'boolean', [
+                    'ACTIVE' => true,
+                    'INACTIVE' => false,
+                ]),
+            ],
+        );
+
+        $output = $generator->generate($enum);
+
+        expect($output)
+            ->toContain("import { useLocalizer } from '@devwizard/laravel-localizer-react';")
+            ->toContain('export function useCampusStatusUtils() {')
+            ->toContain('    const { __ } = useLocalizer();')
+            ->toContain('        color(status: CampusStatus): string {')
+            ->toContain('            switch (status) {')
+            ->toContain('                case CampusStatus.ACTIVE:')
+            ->toContain("                    return 'green';")
+            ->toContain('        isActive(status: CampusStatus): boolean {')
+            ->toContain('            return status === CampusStatus.ACTIVE;');
+    });
+
+    it('generates localization hook with custom methods for Vue', function () {
+        $generator = new TypeScriptGenerator(localizationMode: 'vue');
+
+        $enum = new EnumDefinition(
+            fqcn: 'App\Enums\CampusStatus',
+            name: 'CampusStatus',
+            isBacked: true,
+            backingType: 'string',
+            cases: [
+                new EnumCaseDefinition('ACTIVE', 'active', 'Active'),
+                new EnumCaseDefinition('INACTIVE', 'inactive', 'Inactive'),
+            ],
+            methods: [
+                new EnumMethodDefinition('color', ['string'], 'string', [
+                    'ACTIVE' => 'green',
+                    'INACTIVE' => 'gray',
+                ]),
+            ],
+        );
+
+        $output = $generator->generate($enum);
+
+        expect($output)
+            ->toContain("import { useLocalizer } from '@devwizard/laravel-localizer-vue';")
+            ->toContain('export function useCampusStatusUtils() {')
+            ->toContain('    const { __ } = useLocalizer();')
+            ->toContain('        color(status: CampusStatus): string {')
+            ->toContain('            switch (status) {')
+            ->toContain('                case CampusStatus.ACTIVE:')
+            ->toContain("                    return 'green';");
+    });
+
+    it('generates localized boolean methods with multiple or no true values', function () {
+        $generator = new TypeScriptGenerator(localizationMode: 'react');
+
+        $enum = new EnumDefinition(
+            fqcn: 'App\Enums\Status',
+            name: 'Status',
+            isBacked: true,
+            backingType: 'string',
+            cases: [
+                new EnumCaseDefinition('ACTIVE', 'active'),
+                new EnumCaseDefinition('PENDING', 'pending'),
+                new EnumCaseDefinition('INACTIVE', 'inactive'),
+            ],
+            methods: [
+                new EnumMethodDefinition('isActiveOrPending', ['bool'], 'boolean', [
+                    'ACTIVE' => true,
+                    'PENDING' => true,
+                    'INACTIVE' => false,
+                ]),
+                new EnumMethodDefinition('isImpossible', ['bool'], 'boolean', [
+                    'ACTIVE' => false,
+                    'PENDING' => false,
+                    'INACTIVE' => false,
+                ]),
+            ],
+        );
+
+        $output = $generator->generate($enum);
+
+        expect($output)
+            ->toContain('isActiveOrPending(status: Status): boolean {')
+            ->toContain('            return status === Status.ACTIVE || status === Status.PENDING;')
+            ->toContain('isImpossible(status: Status): boolean {')
+            ->toContain('            return false;');
+    });
+
+    it('does not import useLocalizer when localization is enabled but no labels exist', function () {
+        $generator = new TypeScriptGenerator(localizationMode: 'react');
+
+        $enum = new EnumDefinition(
+            fqcn: 'App\Enums\Status',
+            name: 'Status',
+            isBacked: true,
+            backingType: 'string',
+            cases: [
+                new EnumCaseDefinition('ACTIVE', 'active'),
+            ],
+            methods: [
+                new EnumMethodDefinition('color', ['string'], 'string', [
+                    'ACTIVE' => 'green',
+                ]),
+            ],
+        );
+
+        $output = $generator->generate($enum);
+
+        expect($output)
+            ->not
+            ->toContain("import { useLocalizer } from '@devwizard/laravel-localizer-react';")
+            ->not
+            ->toContain('const { __ } = useLocalizer();')
+            ->toContain('export function useStatusUtils() {')
+            ->toContain('    return {')
+            ->toContain('        color(status: Status): string {');
+    });
+
+    it('does not generate label method when generateLabelMaps is disabled', function () {
+        $generator = new TypeScriptGenerator(generateLabelMaps: false);
+
+        $enum = new EnumDefinition(
+            fqcn: 'App\Enums\Status',
+            name: 'Status',
+            isBacked: true,
+            backingType: 'string',
+            cases: [
+                new EnumCaseDefinition('ACTIVE', 'active', 'Active Status'),
+            ],
+        );
+
+        $output = $generator->generate($enum);
+
+        expect($output)
+            ->not
+            ->toContain('label(status: Status): string {')
+            ->toContain('export const StatusUtils = {')
+            ->toContain('  options(): Status[] {');
+    });
+
+    it('does not generate custom methods when generateMethodMaps is disabled', function () {
+        $generator = new TypeScriptGenerator(generateMethodMaps: false);
+
+        $enum = new EnumDefinition(
+            fqcn: 'App\Enums\CampusStatus',
+            name: 'CampusStatus',
+            isBacked: true,
+            backingType: 'string',
+            cases: [
+                new EnumCaseDefinition('ACTIVE', 'active'),
+                new EnumCaseDefinition('INACTIVE', 'inactive'),
+            ],
+            methods: [
+                new EnumMethodDefinition('color', ['string'], 'string', [
+                    'ACTIVE' => 'green',
+                    'INACTIVE' => 'gray',
+                ]),
+            ],
+        );
+
+        $output = $generator->generate($enum);
+
+        expect($output)
+            ->not
+            ->toContain('color(status: CampusStatus): string {')
+            ->toContain('export const CampusStatusUtils = {')
+            ->toContain('  options(): CampusStatus[] {');
+    });
+
+    it('does not generate union types when generateUnionTypes is disabled', function () {
+        $generator = new TypeScriptGenerator(generateUnionTypes: false);
+
+        $enum = new EnumDefinition(
+            fqcn: 'App\Enums\Status',
+            name: 'Status',
+            isBacked: true,
+            backingType: 'string',
+            cases: [
+                new EnumCaseDefinition('ACTIVE', 'active'),
+            ],
+        );
+
+        $output = $generator->generate($enum);
+
+        expect($output)
+            ->not
+            ->toContain('export type Status =')
+            ->toContain('export const Status = {')
+            ->toContain('export const StatusUtils = {');
+    });
 });
 
 describe('TypeScriptGenerator barrel', function () {
-    it('generates barrel index file', function () {
+    it('generates barrel index file with kebab case', function () {
         $enums = [
             new EnumDefinition('App\Enums\OrderStatus', 'OrderStatus', true, 'string', []),
             new EnumDefinition('App\Enums\PaymentMethod', 'PaymentMethod', true, 'string', []),
@@ -315,5 +529,47 @@ describe('TypeScriptGenerator barrel', function () {
             ->toContain('// AUTO-GENERATED — DO NOT EDIT MANUALLY')
             ->toContain("export * from './order-status';")
             ->toContain("export * from './payment-method';");
+    });
+
+    it('generates barrel index file with snake case', function () {
+        $enums = [
+            new EnumDefinition('App\Enums\OrderStatus', 'OrderStatus', true, 'string', []),
+            new EnumDefinition('App\Enums\PaymentMethod', 'PaymentMethod', true, 'string', []),
+        ];
+
+        $output = $this->generator->generateBarrel($enums, 'snake');
+
+        expect($output)
+            ->toContain('// AUTO-GENERATED — DO NOT EDIT MANUALLY')
+            ->toContain("export * from './order_status';")
+            ->toContain("export * from './payment_method';");
+    });
+
+    it('generates barrel index file with camel case', function () {
+        $enums = [
+            new EnumDefinition('App\Enums\OrderStatus', 'OrderStatus', true, 'string', []),
+            new EnumDefinition('App\Enums\PaymentMethod', 'PaymentMethod', true, 'string', []),
+        ];
+
+        $output = $this->generator->generateBarrel($enums, 'camel');
+
+        expect($output)
+            ->toContain('// AUTO-GENERATED — DO NOT EDIT MANUALLY')
+            ->toContain("export * from './orderStatus';")
+            ->toContain("export * from './paymentMethod';");
+    });
+
+    it('generates barrel index file with pascal case', function () {
+        $enums = [
+            new EnumDefinition('App\Enums\OrderStatus', 'OrderStatus', true, 'string', []),
+            new EnumDefinition('App\Enums\PaymentMethod', 'PaymentMethod', true, 'string', []),
+        ];
+
+        $output = $this->generator->generateBarrel($enums, 'pascal');
+
+        expect($output)
+            ->toContain('// AUTO-GENERATED — DO NOT EDIT MANUALLY')
+            ->toContain("export * from './OrderStatus';")
+            ->toContain("export * from './PaymentMethod';");
     });
 });
