@@ -376,6 +376,42 @@ describe('TypeScriptGenerator', function () {
             ->toContain("                    return 'green';");
     });
 
+    it('generates localized boolean methods with multiple or no true values', function () {
+        $generator = new TypeScriptGenerator(localizationMode: 'react');
+
+        $enum = new EnumDefinition(
+            fqcn: 'App\Enums\Status',
+            name: 'Status',
+            isBacked: true,
+            backingType: 'string',
+            cases: [
+                new EnumCaseDefinition('ACTIVE', 'active'),
+                new EnumCaseDefinition('PENDING', 'pending'),
+                new EnumCaseDefinition('INACTIVE', 'inactive'),
+            ],
+            methods: [
+                new EnumMethodDefinition('isActiveOrPending', ['bool'], 'boolean', [
+                    'ACTIVE' => true,
+                    'PENDING' => true,
+                    'INACTIVE' => false,
+                ]),
+                new EnumMethodDefinition('isImpossible', ['bool'], 'boolean', [
+                    'ACTIVE' => false,
+                    'PENDING' => false,
+                    'INACTIVE' => false,
+                ]),
+            ],
+        );
+
+        $output = $generator->generate($enum);
+
+        expect($output)
+            ->toContain('isActiveOrPending(status: Status): boolean {')
+            ->toContain('            return status === Status.ACTIVE || status === Status.PENDING;')
+            ->toContain('isImpossible(status: Status): boolean {')
+            ->toContain('            return false;');
+    });
+
     it('does not import useLocalizer when localization is enabled but no labels exist', function () {
         $generator = new TypeScriptGenerator(localizationMode: 'react');
 
@@ -397,8 +433,10 @@ describe('TypeScriptGenerator', function () {
         $output = $generator->generate($enum);
 
         expect($output)
-            ->not->toContain("import { useLocalizer } from '@devwizard/laravel-localizer-react';")
-            ->not->toContain('const { __ } = useLocalizer();')
+            ->not
+            ->toContain("import { useLocalizer } from '@devwizard/laravel-localizer-react';")
+            ->not
+            ->toContain('const { __ } = useLocalizer();')
             ->toContain('export function useStatusUtils() {')
             ->toContain('    return {')
             ->toContain('        color(status: Status): string {');
@@ -420,7 +458,8 @@ describe('TypeScriptGenerator', function () {
         $output = $generator->generate($enum);
 
         expect($output)
-            ->not->toContain('label(status: Status): string {')
+            ->not
+            ->toContain('label(status: Status): string {')
             ->toContain('export const StatusUtils = {')
             ->toContain('  options(): Status[] {');
     });
@@ -448,7 +487,8 @@ describe('TypeScriptGenerator', function () {
         $output = $generator->generate($enum);
 
         expect($output)
-            ->not->toContain('color(status: CampusStatus): string {')
+            ->not
+            ->toContain('color(status: CampusStatus): string {')
             ->toContain('export const CampusStatusUtils = {')
             ->toContain('  options(): CampusStatus[] {');
     });
@@ -469,7 +509,8 @@ describe('TypeScriptGenerator', function () {
         $output = $generator->generate($enum);
 
         expect($output)
-            ->not->toContain('export type Status =')
+            ->not
+            ->toContain('export type Status =')
             ->toContain('export const Status = {')
             ->toContain('export const StatusUtils = {');
     });
