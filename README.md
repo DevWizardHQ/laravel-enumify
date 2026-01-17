@@ -29,9 +29,8 @@ Laravel Enumify keeps frontend TypeScript enums in sync with backend PHP enums a
 
 ## Package Links
 
--   Composer (Packagist): https://packagist.org/packages/devwizardhq/laravel-enumify
--   NPM: https://www.npmjs.com/package/@devwizard/vite-plugin-enumify
--   Repository: https://github.com/devwizardhq/laravel-enumify
+-   [Composer](https://packagist.org/packages/devwizardhq/laravel-enumify) 
+-   [NPM](https://www.npmjs.com/package/@devwizard/vite-plugin-enumify)
 
 ## Installation
 
@@ -446,8 +445,8 @@ Suggested pipelines:
 
 ## Changelog
 
-See `CHANGELOG.md`.
+See [CHANGELOG.md](./CHANGELOG.md)
 
 ## License
 
-MIT. See `LICENSE.md`.
+MIT. See [LICENSE.md](./LICENSE.md)
