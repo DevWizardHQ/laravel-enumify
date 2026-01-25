@@ -679,3 +679,171 @@ describe('summary table coverage', function () {
             ->assertSuccessful();
     });
 });
+
+describe('additional edge case coverage', function () {
+    it('detects update pattern with enum value', function () {
+        $file = $this->outputPath.'/update_test.php';
+        $content = <<<'PHP'
+            <?php
+            Model::query()->update(['status' => 'pending']);
+            PHP;
+        file_put_contents($file, $content);
+
+        $this
+            ->artisan('enumify:refactor', ['--path' => $this->outputPath])
+            ->expectsOutputToContain('pending')
+            ->assertSuccessful();
+    });
+
+    it('handles loadEnums with invalid path in config', function () {
+        // Include both an invalid path AND a valid path - invalid should be skipped
+        config()->set('enumify.paths.enums', [
+            '/invalid/path/that/does/not/exist',
+            $this->enumPath,
+        ]);
+
+        // Should continue without failing, skipping invalid path
+        $this
+            ->artisan('enumify:refactor', ['--path' => $this->outputPath])
+            ->assertSuccessful();
+    });
+
+    it('handles loadEnums with non-php files', function () {
+        $enumDir = $this->outputPath.'/enums_with_extras';
+        mkdir($enumDir, 0755, true);
+
+        // Create a non-PHP file
+        file_put_contents($enumDir.'/readme.txt', 'Not an enum');
+        file_put_contents($enumDir.'/style.css', '.class {}');
+
+        // Create a valid enum PHP file
+        $enumFile = $enumDir.'/TestEnum.php';
+        $enumContent = <<<'PHP'
+            <?php
+            namespace App\Enums;
+
+            enum TestEnum: string
+            {
+                case ACTIVE = 'active';
+            }
+            PHP;
+        file_put_contents($enumFile, $enumContent);
+        require_once $enumFile;
+
+        config()->set('enumify.paths.enums', [$enumDir]);
+
+        $this
+            ->artisan('enumify:refactor', ['--path' => $this->outputPath])
+            ->assertSuccessful();
+    });
+
+    it('handles loadEnums with file missing namespace', function () {
+        $enumDir = $this->outputPath.'/enums_no_namespace';
+        mkdir($enumDir, 0755, true);
+
+        // Create PHP file with enum but no namespace
+        $enumFile = $enumDir.'/NamelessEnum.php';
+        $enumContent = <<<'PHP'
+            <?php
+            enum NamelessEnum: string
+            {
+                case VALUE = 'value';
+            }
+            PHP;
+        file_put_contents($enumFile, $enumContent);
+
+        // Include both the test dir (with invalid enum) AND valid fixture dir
+        config()->set('enumify.paths.enums', [$enumDir, $this->enumPath]);
+
+        $this
+            ->artisan('enumify:refactor', ['--path' => $this->outputPath])
+            ->assertSuccessful();
+    });
+
+    it('handles loadEnums with file missing enum keyword', function () {
+        $enumDir = $this->outputPath.'/enums_no_enum';
+        mkdir($enumDir, 0755, true);
+
+        // Create PHP file that contains 'enum' in a comment (not an actual enum)
+        $enumFile = $enumDir.'/FakeEnum.php';
+        $enumContent = <<<'PHP'
+            <?php
+            namespace App\Fakes;
+
+            // This is not an enum, just has enum in comment
+            class FakeClass
+            {
+                public function getStatus() {
+                    return 'active';
+                }
+            }
+            PHP;
+        file_put_contents($enumFile, $enumContent);
+
+        // Include both the test dir (with non-enum file) AND valid fixture dir
+        config()->set('enumify.paths.enums', [$enumDir, $this->enumPath]);
+
+        $this
+            ->artisan('enumify:refactor', ['--path' => $this->outputPath])
+            ->assertSuccessful();
+    });
+
+    it('scans directory with non-php files', function () {
+        // Create non-PHP files that should be skipped
+        file_put_contents($this->outputPath.'/style.css', '.class { color: red; }');
+        file_put_contents($this->outputPath.'/script.js', 'const status = "pending";');
+
+        // Create a PHP file
+        $file = $this->outputPath.'/scan_test.php';
+        $content = <<<'PHP'
+            <?php
+            $query->where('status', 'pending');
+            PHP;
+        file_put_contents($file, $content);
+
+        $this
+            ->artisan('enumify:refactor', ['--path' => $this->outputPath])
+            ->expectsOutputToContain('pending')
+            ->assertSuccessful();
+    });
+
+    it('handles relative path in fix mode', function () {
+        $file = $this->outputPath.'/relative_fix_test.php';
+        $content = <<<'PHP'
+            <?php
+            $query->where('status', 'pending');
+            PHP;
+        file_put_contents($file, $content);
+
+        // Use relative path (relative to base_path)
+        $relativePath = str_replace(base_path().'/', '', $this->outputPath);
+
+        $this
+            ->artisan('enumify:refactor', ['--path' => $relativePath, '--fix' => true])
+            ->assertSuccessful();
+
+        // Verify the fix was applied
+        $newContent = file_get_contents($file);
+        expect($newContent)->toContain('OrderStatus::PENDING');
+    });
+
+    it('handles target enum filtering with multiple enums', function () {
+        $file = $this->outputPath.'/target_filter_test.php';
+        $content = <<<'PHP'
+            <?php
+            // Both should match different enums
+            $query->where('status', 'pending');   // OrderStatus
+            $query->where('status', 'active');    // CampusStatus
+            $query->where('role', 'admin');       // UserRole
+            PHP;
+        file_put_contents($file, $content);
+
+        // Filter to only CampusStatus
+        $this
+            ->artisan('enumify:refactor', ['--path' => $this->outputPath, '--enum' => 'CampusStatus'])
+            ->expectsOutputToContain('active')
+            ->doesntExpectOutputToContain('pending')
+            ->doesntExpectOutputToContain('admin')
+            ->assertSuccessful();
+    });
+});
