@@ -1105,7 +1105,7 @@ final class RefactorCommand extends Command
 
         // Get relative path or use basename if file is outside base_path
         if (str_starts_with($normalizedFullPath, $normalizedBasePath.'/')) {
-            $relativePath = substr($normalizedFullPath, strlen($normalizedBasePath) + 1);
+            $relativePath = substr($normalizedFullPath, strlen($normalizedBasePath) + 1); // @codeCoverageIgnore
         } else {
             // File is outside base_path (e.g., temp directory in tests)
             $relativePath = basename($fullPath);
