@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Support\Facades\File;
 
 beforeEach(function () {
@@ -48,8 +50,9 @@ it('creates backups when requested', function () {
 
     // Mock backup directory to be inside our temp path for cleanup
     $backupPath = $this->outputPath.'/backups';
-    if (! is_dir($backupPath))
+    if (! is_dir($backupPath)) {
         mkdir($backupPath);
+    }
 
     // We can't easily change the hardcoded backup path in the command without more refactoring
     // So we'll just check if the command reports backup creation
