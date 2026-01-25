@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace DevWizardHQ\Enumify\Commands;
 
-use DevWizardHQ\Enumify\Data\EnumDefinition;
 use DevWizardHQ\Enumify\Services\EnumDiscoveryService;
+use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
-use Exception;
 use ReflectionEnum;
 
 use function Laravel\Prompts\confirm;
