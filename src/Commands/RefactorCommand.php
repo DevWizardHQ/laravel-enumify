@@ -1099,8 +1099,21 @@ final class RefactorCommand extends Command
             mkdir($backupDir, 0755, true);
         }
 
-        $relativePath = str_replace(base_path() . '/', '', $fullPath);
-        $backupPath = $backupDir . '/' . str_replace('/', '_', $relativePath);
+        // Normalize paths for cross-platform compatibility
+        $normalizedFullPath = str_replace('\\', '/', $fullPath);
+        $normalizedBasePath = str_replace('\\', '/', base_path());
+
+        // Get relative path or use basename if file is outside base_path
+        if (str_starts_with($normalizedFullPath, $normalizedBasePath . '/')) {
+            $relativePath = substr($normalizedFullPath, strlen($normalizedBasePath) + 1);
+        } else {
+            // File is outside base_path (e.g., temp directory in tests)
+            $relativePath = basename($fullPath);
+        }
+
+        // Create safe filename by replacing path separators and removing invalid chars
+        $safeFilename = str_replace(['/', '\\', ':'], '_', $relativePath);
+        $backupPath = $backupDir . '/' . $safeFilename;
 
         file_put_contents($backupPath, $content);
         $this->backups[$fullPath] = $backupPath;
