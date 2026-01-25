@@ -11,7 +11,6 @@ use ReflectionEnum;
 
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\multiselect;
-use function Laravel\Prompts\progress;
 use function Laravel\Prompts\select;
 use function Laravel\Prompts\text;
 
@@ -718,11 +717,9 @@ final class RefactorCommand extends Command
             return;
         }
 
-        progress(
-            label: 'Scanning files',
-            steps: $phpFiles,
-            callback: fn ($file) => $this->scanFile($file->getPathname(), $targetEnums)
-        );
+        $this->withProgressBar($phpFiles, function ($file) use ($targetEnums) {
+            $this->scanFile($file->getPathname(), $targetEnums);
+        });
 
         $this->newLine();
     }
