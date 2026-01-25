@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Artisan;
+
 beforeEach(function () {
     $this->outputPath = sys_get_temp_dir().'/enumify-refactor-test-'.uniqid();
     mkdir($this->outputPath, 0755, true);
@@ -28,37 +30,37 @@ afterEach(function () {
 
 describe('enumify:refactor command', function () {
     it('runs and loads enums from configured paths', function () {
-        $this
-            ->artisan('enumify:refactor', ['--path' => $this->enumPath])
-            ->expectsOutputToContain('Loading enums')
-            ->expectsOutputToContain('Loaded')
-            ->assertSuccessful();
+        Artisan::call('enumify:refactor', ['--path' => $this->enumPath]);
+        $output = Artisan::output();
+
+        expect($output)->toContain('Loading enums');
+        expect($output)->toContain('Loaded');
     });
 
     it('displays results after scanning', function () {
-        $this
-            ->artisan('enumify:refactor', ['--path' => $this->enumPath])
-            ->expectsOutputToContain('Scanning')
-            ->assertSuccessful();
+        Artisan::call('enumify:refactor', ['--path' => $this->enumPath]);
+        $output = Artisan::output();
+
+        expect($output)->toContain('Scanning');
     });
 
     it('supports dry-run mode', function () {
-        $this
-            ->artisan('enumify:refactor', ['--dry-run' => true, '--path' => $this->enumPath])
-            ->assertSuccessful();
+        $exitCode = Artisan::call('enumify:refactor', ['--dry-run' => true, '--path' => $this->enumPath]);
+
+        expect($exitCode)->toBe(0);
     });
 
     it('supports json output format', function () {
-        $this
-            ->artisan('enumify:refactor', ['--json' => true, '--path' => $this->enumPath])
-            ->assertSuccessful();
+        $exitCode = Artisan::call('enumify:refactor', ['--json' => true, '--path' => $this->enumPath]);
+
+        expect($exitCode)->toBe(0);
     });
 
     it('can filter by specific enum', function () {
-        $this
-            ->artisan('enumify:refactor', ['--enum' => 'OrderStatus', '--path' => $this->enumPath])
-            ->expectsOutputToContain('Loaded 1 enum')
-            ->assertSuccessful();
+        Artisan::call('enumify:refactor', ['--enum' => 'OrderStatus', '--path' => $this->enumPath]);
+        $output = Artisan::output();
+
+        expect($output)->toContain('Loaded 1 enum');
     });
 
     it('handles empty enum directory gracefully', function () {
@@ -67,10 +69,10 @@ describe('enumify:refactor command', function () {
 
         config()->set('enumify.paths.enums', [$emptyDir]);
 
-        $this
-            ->artisan('enumify:refactor', ['--path' => $emptyDir])
-            ->expectsOutputToContain('No enums found')
-            ->assertExitCode(1);
+        Artisan::call('enumify:refactor', ['--path' => $emptyDir]);
+        $output = Artisan::output();
+
+        expect($output)->toContain('No enums found');
 
         @rmdir($emptyDir);
     });
@@ -78,24 +80,24 @@ describe('enumify:refactor command', function () {
 
 describe('enumify:refactor --normalize-keys', function () {
     it('runs key normalization mode', function () {
-        $this
-            ->artisan('enumify:refactor', ['--normalize-keys' => true])
-            ->expectsOutputToContain('Key Normalization Mode')
-            ->assertSuccessful();
+        Artisan::call('enumify:refactor', ['--normalize-keys' => true]);
+        $output = Artisan::output();
+
+        expect($output)->toContain('Key Normalization Mode');
     });
 
     it('shows success when all keys are uppercase', function () {
         // The test fixtures have uppercase keys, so this should pass
-        $this
-            ->artisan('enumify:refactor', ['--normalize-keys' => true])
-            ->expectsOutputToContain('All enum keys are already UPPERCASE')
-            ->assertSuccessful();
+        Artisan::call('enumify:refactor', ['--normalize-keys' => true]);
+        $output = Artisan::output();
+
+        expect($output)->toContain('All enum keys are already UPPERCASE');
     });
 
     it('supports dry-run in normalize mode', function () {
-        $this
-            ->artisan('enumify:refactor', ['--normalize-keys' => true, '--dry-run' => true])
-            ->assertSuccessful();
+        $exitCode = Artisan::call('enumify:refactor', ['--normalize-keys' => true, '--dry-run' => true]);
+
+        expect($exitCode)->toBe(0);
     });
 });
 
@@ -103,30 +105,27 @@ describe('enumify:refactor reports', function () {
     it('can export json report', function () {
         $reportPath = $this->outputPath.'/report.json';
 
-        $this
-            ->artisan('enumify:refactor', ['--report' => $reportPath, '--path' => $this->enumPath])
-            ->assertSuccessful();
+        $exitCode = Artisan::call('enumify:refactor', ['--report' => $reportPath, '--path' => $this->enumPath]);
 
+        expect($exitCode)->toBe(0);
         expect(file_exists($reportPath))->toBeTrue();
     });
 
     it('can export csv report', function () {
         $reportPath = $this->outputPath.'/report.csv';
 
-        $this
-            ->artisan('enumify:refactor', ['--report' => $reportPath, '--path' => $this->enumPath])
-            ->assertSuccessful();
+        $exitCode = Artisan::call('enumify:refactor', ['--report' => $reportPath, '--path' => $this->enumPath]);
 
+        expect($exitCode)->toBe(0);
         expect(file_exists($reportPath))->toBeTrue();
     });
 
     it('can export markdown report', function () {
         $reportPath = $this->outputPath.'/report.md';
 
-        $this
-            ->artisan('enumify:refactor', ['--report' => $reportPath, '--path' => $this->enumPath])
-            ->assertSuccessful();
+        $exitCode = Artisan::call('enumify:refactor', ['--report' => $reportPath, '--path' => $this->enumPath]);
 
+        expect($exitCode)->toBe(0);
         expect(file_exists($reportPath))->toBeTrue();
     });
 });

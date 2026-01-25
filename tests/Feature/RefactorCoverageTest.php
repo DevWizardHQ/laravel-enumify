@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 
 beforeEach(function () {
@@ -29,10 +30,10 @@ it('applies fixes to files', function () {
         PHP;
     file_put_contents($file, $content);
 
-    $this
-        ->artisan('enumify:refactor', ['--fix' => true, '--path' => $this->outputPath])
-        ->expectsOutputToContain('APPLY MODE')
-        ->assertSuccessful();
+    Artisan::call('enumify:refactor', ['--fix' => true, '--path' => $this->outputPath]);
+    $output = Artisan::output();
+
+    expect($output)->toContain('APPLY MODE');
 
     $newContent = file_get_contents($file);
     expect($newContent)
@@ -57,10 +58,10 @@ it('creates backups when requested', function () {
     // We can't easily change the hardcoded backup path in the command without more refactoring
     // So we'll just check if the command reports backup creation
 
-    $this
-        ->artisan('enumify:refactor', ['--fix' => true, '--backup' => true, '--path' => $this->outputPath])
-        ->expectsOutputToContain('Backups saved')
-        ->assertSuccessful();
+    Artisan::call('enumify:refactor', ['--fix' => true, '--backup' => true, '--path' => $this->outputPath]);
+    $output = Artisan::output();
+
+    expect($output)->toContain('Backups saved');
 });
 
 it('applies key normalization fixes', function () {
@@ -103,10 +104,10 @@ it('applies key normalization fixes', function () {
     // Configure path to our temp enum
     config()->set('enumify.paths.enums', [$this->outputPath]);
 
-    $this
-        ->artisan('enumify:refactor', ['--normalize-keys' => true, '--fix' => true, '--path' => $this->outputPath])
-        ->expectsOutputToContain('Applying key normalization')
-        ->assertSuccessful();
+    Artisan::call('enumify:refactor', ['--normalize-keys' => true, '--fix' => true, '--path' => $this->outputPath]);
+    $output = Artisan::output();
+
+    expect($output)->toContain('Applying key normalization');
 
     $newEnumContent = file_get_contents($enumFile);
     expect($newEnumContent)
