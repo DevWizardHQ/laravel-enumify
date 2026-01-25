@@ -251,7 +251,7 @@ final class RefactorCommand extends Command
     private function runNormalizeKeys(): int
     {
         $this->displayBanner();
-        $this->line('<fg=yellow;options=bold>🔠 Key Normalization Mode</>');
+        $this->warn('🔠 Key Normalization Mode');
         $this->newLine();
 
         $this->loadEnumsWithPaths();
@@ -639,7 +639,7 @@ final class RefactorCommand extends Command
         $this->info("✅ Normalized {$keysChanged} keys, updated {$refsUpdated} references in {$filesChanged} file(s)");
 
         if ($withBackup) {
-            $this->line('<fg=gray>Backups saved to: storage/app/enumify-refactor-backups/</>');
+            $this->info('Backups saved to: storage/app/enumify-refactor-backups/');
         }
 
         return self::SUCCESS;
@@ -965,9 +965,9 @@ final class RefactorCommand extends Command
     private function fix(bool $dryRun): int
     {
         if ($dryRun) {
-            $this->info('🔍 <fg=yellow>DRY-RUN MODE</> — No changes will be made');
+            $this->warn('🔍 DRY-RUN MODE - No changes will be made');
         } else {
-            $this->info('✏️  <fg=green>APPLY MODE</> — Changes will be written to files');
+            $this->info('✏️ APPLY MODE - Changes will be written to files');
         }
         $this->newLine();
 
@@ -1079,7 +1079,7 @@ final class RefactorCommand extends Command
         $this->info("✅ Applied {$changesApplied} changes in {$filesChanged} file(s)");
 
         if ($withBackup) {
-            $this->line('<fg=gray>Backups saved to: storage/app/enumify-refactor-backups/</>');
+            $this->info('Backups saved to: storage/app/enumify-refactor-backups/');
         }
 
         return self::SUCCESS;
