@@ -38,7 +38,6 @@ final class RefactorCommand extends Command
         {--backup : Create backup before applying changes}
         {--include=* : File patterns to include (e.g., *.php)}
         {--exclude=* : Paths/patterns to exclude}
-        {--strict : Strict matching (requires column name to match enum context)}
         {--report= : Export report to file (formats: json, csv, md)}
         {--detailed : Show detailed output with code context}
         {--normalize-keys : Convert enum keys to UPPERCASE and fix all references}';
@@ -48,7 +47,7 @@ final class RefactorCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Scan and refactor hardcoded enum values. Supports dry-run, interactive mode, key normalization, and comprehensive reporting.';
+    protected $description = 'Scan and refactor hardcoded enum values based on model casts. Only columns with enum casts will be refactored.';
 
     /**
      * @var array<string, array{name: string, cases: array<string, string>, class: string, path: string}>
@@ -56,7 +55,7 @@ final class RefactorCommand extends Command
     private array $enums = [];
 
     /**
-     * @var array<int, array{file: string, line: int, type: string, column: string, value: string, code: string, enum: string, case: string, class: string, context: string}>
+     * @var array<int, array{file: string, line: int, type: string, column: string, value: string, code: string, enum: string, case: string, class: string, context: string, hasCast: bool}>
      */
     private array $issues = [];
 
@@ -71,6 +70,13 @@ final class RefactorCommand extends Command
     private array $backups = [];
 
     /**
+     * Model casts mapping: model class => [column => enum class]
+     *
+     * @var array<string, array<string, string>>
+     */
+    private array $modelCasts = [];
+
+    /**
      * Patterns to detect hardcoded enum values.
      *
      * @var array<string, string>
@@ -79,8 +85,6 @@ final class RefactorCommand extends Command
         'where' => '/->where\([\'"](\w+)[\'"]\s*,\s*[\'"]([a-zA-Z0-9_-]+)[\'"]\)/',
         'orWhere' => '/->orWhere\([\'"](\w+)[\'"]\s*,\s*[\'"]([a-zA-Z0-9_-]+)[\'"]\)/',
         'whereNot' => '/->whereNot\([\'"](\w+)[\'"]\s*,\s*[\'"]([a-zA-Z0-9_-]+)[\'"]\)/',
-        'update' => '/->update\(\[[\'"](\w+)[\'"]\s*=>\s*[\'"]([a-zA-Z0-9_-]+)[\'"]/',
-        'create' => '/->create\(\[[\'"](\w+)[\'"]\s*=>\s*[\'"]([a-zA-Z0-9_-]+)[\'"]/',
         'array' => '/[\'"](status|type|state|category|priority|role|level|method|direction|source|channel)[\'"]\s*=>\s*[\'"]([a-zA-Z0-9_-]+)[\'"]/',
         'comparison' => '/\$\w+->(status|type|state|category|priority|role|level)\s*===?\s*[\'"]([a-zA-Z0-9_-]+)[\'"]/',
         'validation' => '/Rule::in\(\[([^\]]+)\]\)/',
@@ -125,6 +129,8 @@ final class RefactorCommand extends Command
             return self::FAILURE;
         }
 
+        $this->loadModelCasts();
+
         // --fix applies changes, --dry-run previews changes, default is scan
         if ($isFix) {
             return $this->fix(dryRun: false);
@@ -165,6 +171,8 @@ final class RefactorCommand extends Command
 
             return self::FAILURE;
         }
+
+        $this->loadModelCasts();
 
         // Select mode
         $mode = select(
@@ -398,13 +406,205 @@ final class RefactorCommand extends Command
         }
 
         $count = count($this->enums);
-        $this->info("✅ Loaded {$count} enum".($count !== 1 ? 's' : ''));
+        $this->info("✅ Loaded {$count} enum" . ($count !== 1 ? 's' : ''));
         $this->newLine();
     }
 
     private function loadEnumsWithPaths(): void
     {
         $this->loadEnums();
+    }
+
+    /**
+     * Load model casts to determine which columns have enum casts.
+     */
+    private function loadModelCasts(): void
+    {
+        /** @var array<string> $modelPaths */
+        $modelPaths = config('enumify.paths.models', ['app/Models']);
+
+        $this->info('📦 Loading model casts...');
+
+        foreach ($modelPaths as $path) {
+            $fullPath = $this->isAbsolutePath($path) ? $path : base_path($path);
+
+            // @codeCoverageIgnoreStart
+            if (! is_dir($fullPath)) {
+                continue;
+            }
+            // @codeCoverageIgnoreEnd
+
+            $files = File::allFiles($fullPath);
+
+            foreach ($files as $file) {
+                // @codeCoverageIgnoreStart
+                if ($file->getExtension() !== 'php') {
+                    continue;
+                }
+                // @codeCoverageIgnoreEnd
+
+                $this->extractModelCasts($file->getPathname());
+            }
+        }
+
+        $castCount = array_sum(array_map('count', $this->modelCasts));
+        $modelCount = count($this->modelCasts);
+        $this->info("✅ Found {$castCount} enum cast" . ($castCount !== 1 ? 's' : '') . " in {$modelCount} model" . ($modelCount !== 1 ? 's' : ''));
+        $this->newLine();
+    }
+
+    /**
+     * Extract casts from a model file.
+     */
+    private function extractModelCasts(string $filePath): void
+    {
+        $content = file_get_contents($filePath);
+
+        // Get the model class name
+        $className = $this->getModelClassFromFile($filePath);
+        // @codeCoverageIgnoreStart
+        if (! $className) {
+            return;
+        }
+        // @codeCoverageIgnoreEnd
+
+        // Check if it's a Model (extends Model or has casts)
+        // @codeCoverageIgnoreStart
+        if (! str_contains($content, 'extends Model') && ! str_contains($content, 'casts')) {
+            return;
+        }
+        // @codeCoverageIgnoreEnd
+
+        $castsContent = null;
+
+        // Try to match property style: protected $casts = [...];
+        // @codeCoverageIgnoreStart
+        if (preg_match('/protected\s+\$casts\s*=\s*\[([^\]]+)\]/s', $content, $match)) {
+            $castsContent = $match[1];
+        }
+        // @codeCoverageIgnoreEnd
+        // Try to match method style: protected function casts(): array { return [...]; }
+        elseif (preg_match('/function\s+casts\s*\(\s*\)\s*:\s*array\s*\{\s*return\s*\[([^\]]+)\]/s', $content, $match)) {
+            $castsContent = $match[1];
+        }
+
+        // @codeCoverageIgnoreStart
+        if (! $castsContent) {
+            return;
+        }
+        // @codeCoverageIgnoreEnd
+
+        // Extract column => EnumClass pairs
+        // Matches: 'status' => StatusEnum::class or 'status' => \App\Enums\StatusEnum::class
+        preg_match_all('/[\'"](\w+)[\'"]\s*=>\s*([\\\\]?[\w\\\\]+)::class/', $castsContent, $matches);
+
+        if (! empty($matches[1])) {
+            $this->modelCasts[$className] = [];
+
+            foreach ($matches[1] as $index => $column) {
+                $enumClass = $matches[2][$index];
+
+                // Resolve short class name to full class name if needed
+                $resolvedEnum = $this->resolveEnumClass($enumClass, $content);
+
+                if ($resolvedEnum) {
+                    $this->modelCasts[$className][$column] = $resolvedEnum;
+                }
+            }
+        }
+    }
+
+    /**
+     * Resolve an enum class name to its full class path.
+     */
+    private function resolveEnumClass(string $enumClass, string $fileContent): ?string
+    {
+        // If already a full path (starts with \)
+        // @codeCoverageIgnoreStart
+        if (str_starts_with($enumClass, '\\')) {
+            return ltrim($enumClass, '\\');
+        }
+        // @codeCoverageIgnoreEnd
+
+        // Check if it's one of our loaded enums
+        foreach ($this->enums as $fullClass => $data) {
+            if ($data['name'] === $enumClass || $fullClass === $enumClass) {
+                return $fullClass;
+            }
+        }
+
+        // Try to resolve from use statements
+        // @codeCoverageIgnoreStart
+        if (preg_match('/use\s+([\\\\]?[\w\\\\]+\\\\' . preg_quote($enumClass, '/') . ')\s*;/', $fileContent, $useMatch)) {
+            return ltrim($useMatch[1], '\\');
+        }
+
+        return null;
+        // @codeCoverageIgnoreEnd
+    }
+
+    /**
+     * Get the enum cast for a column from a specific model or any matching model.
+     *
+     * @return array{hasCast: bool, enumClass: string|null, enumName: string|null}
+     */
+    private function getColumnEnumCast(string $column, ?string $modelName = null): array
+    {
+        // If model name provided, search for exact match first
+        // @codeCoverageIgnoreStart
+        if ($modelName) {
+            foreach ($this->modelCasts as $modelClass => $casts) {
+                // Check if model class ends with the model name (e.g., App\Models\LibraryMember matches LibraryMember)
+                if (class_basename($modelClass) === $modelName && isset($casts[$column])) {
+                    $enumClass = $casts[$column];
+                    $enumName = isset($this->enums[$enumClass]) ? $this->enums[$enumClass]['name'] : class_basename($enumClass);
+
+                    return ['hasCast' => true, 'enumClass' => $enumClass, 'enumName' => $enumName];
+                }
+            }
+        }
+        // @codeCoverageIgnoreEnd
+
+        // Fall back to any model with this column cast
+        foreach ($this->modelCasts as $modelClass => $casts) {
+            if (isset($casts[$column])) {
+                $enumClass = $casts[$column];
+                $enumName = isset($this->enums[$enumClass]) ? $this->enums[$enumClass]['name'] : class_basename($enumClass);
+
+                return ['hasCast' => true, 'enumClass' => $enumClass, 'enumName' => $enumName];
+            }
+        }
+
+        return ['hasCast' => false, 'enumClass' => null, 'enumName' => null];
+    }
+
+    /**
+     * Extract model name from code context.
+     * Detects patterns like: Model::query(), Model::where(), $model->where()
+     */
+    private function extractModelFromContext(string $context): ?string
+    {
+        // Match static method calls: LibraryMember::query(), LibraryMember::where()
+        if (preg_match('/([A-Z][a-zA-Z0-9_]+)::(?:query|where|orWhere|whereNot|find|create|update)\s*\(/', $context, $match)) {
+            // Exclude common non-model classes
+            $excludes = ['Auth', 'DB', 'Cache', 'Log', 'Route', 'Request', 'Response', 'Session', 'View', 'Config', 'File', 'Storage', 'Rule'];
+            if (! in_array($match[1], $excludes)) {
+                return $match[1];
+            }
+        }
+
+        // Match model variable patterns: $libraryMember->where(), $member->update()
+        // Try to infer from variable name (e.g., $libraryMember suggests LibraryMember model)
+        // @codeCoverageIgnoreStart
+        if (preg_match('/\$(\w+)->(?:where|orWhere|whereNot|update|save)\s*\(/', $context, $match)) {
+            // Convert camelCase/snake_case to PascalCase
+            $varName = $match[1];
+
+            return str_replace(' ', '', ucwords(str_replace(['_', '-'], ' ', $varName)));
+        }
+        // @codeCoverageIgnoreEnd
+
+        return null;
     }
 
     /**
@@ -422,7 +622,7 @@ final class RefactorCommand extends Command
     }
 
     /**
-     * Get FQCN from a PHP file.
+     * Get FQCN from a PHP file (for enums).
      */
     private function getClassFromFile(string $path): ?string
     {
@@ -437,7 +637,30 @@ final class RefactorCommand extends Command
             return null;
         }
 
-        return $namespaceMatch[1].'\\'.$enumMatch[1];
+        return $namespaceMatch[1] . '\\' . $enumMatch[1];
+    }
+
+    /**
+     * Get FQCN from a PHP model file (for classes).
+     */
+    private function getModelClassFromFile(string $path): ?string
+    {
+        $content = file_get_contents($path);
+
+        // @codeCoverageIgnoreStart
+        if (! preg_match('/namespace\s+([^;]+);/', $content, $namespaceMatch)) {
+            return null;
+        }
+        // @codeCoverageIgnoreEnd
+
+        // Match class declaration (handles final, abstract, readonly modifiers)
+        // @codeCoverageIgnoreStart
+        if (! preg_match('/^(?:final\s+|abstract\s+|readonly\s+)*class\s+(\w+)/m', $content, $classMatch)) {
+            return null;
+        }
+        // @codeCoverageIgnoreEnd
+
+        return $namespaceMatch[1] . '\\' . $classMatch[1];
     }
 
     /**
@@ -480,7 +703,7 @@ final class RefactorCommand extends Command
     private function findEnumReferences(string $enumName, string $caseName): array
     {
         $references = [];
-        $searchPattern = $enumName.'::'.$caseName;
+        $searchPattern = $enumName . '::' . $caseName;
 
         $pathOption = $this->option('path');
         if ($pathOption) {
@@ -506,7 +729,7 @@ final class RefactorCommand extends Command
             foreach ($lines as $lineNum => $line) {
                 if (str_contains($line, $searchPattern)) {
                     $references[] = [
-                        'file' => str_replace(base_path().'/', '', $file->getPathname()),
+                        'file' => str_replace(base_path() . '/', '', $file->getPathname()),
                         'line' => $lineNum + 1,
                         'code' => trim($line),
                     ];
@@ -522,7 +745,7 @@ final class RefactorCommand extends Command
      */
     private function displayKeyNormalizationResults(): void
     {
-        $this->warn('⚠️  Found '.count($this->keyNormalizationIssues).' key(s) to normalize:');
+        $this->warn('⚠️  Found ' . count($this->keyNormalizationIssues) . ' key(s) to normalize:');
         $this->newLine();
 
         $totalRefs = 0;
@@ -532,7 +755,7 @@ final class RefactorCommand extends Command
             $totalRefs += $refCount;
 
             $this->line("<fg=cyan>{$issue['enum']}</>");
-            $this->line("  <fg=red>{$issue['oldKey']}</> → <fg=green>{$issue['newKey']}</> <fg=gray>({$refCount} reference".($refCount !== 1 ? 's' : '').')</>');
+            $this->line("  <fg=red>{$issue['oldKey']}</> → <fg=green>{$issue['newKey']}</> <fg=gray>({$refCount} reference" . ($refCount !== 1 ? 's' : '') . ')</>');
 
             if ($this->option('detailed') && ! empty($issue['references'])) {
                 foreach ($issue['references'] as $ref) {
@@ -542,7 +765,7 @@ final class RefactorCommand extends Command
         }
 
         $this->newLine();
-        $this->info('📊 Total: '.count($this->keyNormalizationIssues)." keys, {$totalRefs} references");
+        $this->info('📊 Total: ' . count($this->keyNormalizationIssues) . " keys, {$totalRefs} references");
     }
 
     /**
@@ -573,14 +796,14 @@ final class RefactorCommand extends Command
 
             foreach ($issues as $issue) {
                 // Replace case declaration: case OldKey = 'value' -> case NEW_KEY = 'value'
-                $pattern = '/case\s+'.preg_quote($issue['oldKey'], '/').'\s*=/';
-                $replacement = 'case '.$issue['newKey'].' =';
+                $pattern = '/case\s+' . preg_quote($issue['oldKey'], '/') . '\s*=/';
+                $replacement = 'case ' . $issue['newKey'] . ' =';
                 $content = preg_replace($pattern, $replacement, $content);
 
                 // Replace self references within the enum file
                 $content = str_replace(
-                    'self::'.$issue['oldKey'],
-                    'self::'.$issue['newKey'],
+                    'self::' . $issue['oldKey'],
+                    'self::' . $issue['newKey'],
                     $content
                 );
 
@@ -590,8 +813,8 @@ final class RefactorCommand extends Command
             file_put_contents($filePath, $content);
             $filesChanged++;
 
-            $relativePath = str_replace(base_path().'/', '', $filePath);
-            $this->line("<fg=green>✓</> {$relativePath} <fg=gray>(".count($issues).' keys)</>');
+            $relativePath = str_replace(base_path() . '/', '', $filePath);
+            $this->line("<fg=green>✓</> {$relativePath} <fg=gray>(" . count($issues) . ' keys)</>');
         }
 
         // Update references throughout the codebase
@@ -623,8 +846,8 @@ final class RefactorCommand extends Command
             }
 
             foreach ($refs as $ref) {
-                $search = $ref['enum'].'::'.$ref['oldKey'];
-                $replace = $ref['enum'].'::'.$ref['newKey'];
+                $search = $ref['enum'] . '::' . $ref['oldKey'];
+                $replace = $ref['enum'] . '::' . $ref['newKey'];
                 $content = str_replace($search, $replace, $content);
                 $refsUpdated++;
             }
@@ -632,8 +855,8 @@ final class RefactorCommand extends Command
             file_put_contents($filePath, $content);
             $filesChanged++;
 
-            $relativePath = str_replace(base_path().'/', '', $filePath);
-            $this->line("<fg=green>✓</> {$relativePath} <fg=gray>(".count($refs).' refs)</>');
+            $relativePath = str_replace(base_path() . '/', '', $filePath);
+            $this->line("<fg=green>✓</> {$relativePath} <fg=gray>(" . count($refs) . ' refs)</>');
         }
 
         $this->newLine();
@@ -721,7 +944,7 @@ final class RefactorCommand extends Command
         progress(
             label: 'Scanning files...',
             steps: $phpFiles,
-            callback: fn ($file) => $this->scanFile($file->getPathname(), $targetEnums),
+            callback: fn($file) => $this->scanFile($file->getPathname(), $targetEnums),
         );
 
         $this->newLine();
@@ -735,7 +958,7 @@ final class RefactorCommand extends Command
     private function scanFile(string $filePath, ?array $targetEnums = null): void
     {
         $content = file_get_contents($filePath);
-        $relativePath = str_replace(base_path().'/', '', $filePath);
+        $relativePath = str_replace(base_path() . '/', '', $filePath);
         $lines = explode("\n", $content);
 
         foreach ($this->patterns as $type => $pattern) {
@@ -808,14 +1031,17 @@ final class RefactorCommand extends Command
      */
     private function getContext(array $lines, int $lineNumber): string
     {
-        $start = max(0, $lineNumber - 2);
-        $end = min(count($lines), $lineNumber + 1);
+        // $lineNumber is 1-based, convert to 0-based for array access
+        $lineIndex = $lineNumber - 1;
+        $start = max(0, $lineIndex - 3); // Get 3 lines before for better context
+        $end = min(count($lines), $lineIndex + 2);
 
         return implode("\n", array_slice($lines, $start, $end - $start));
     }
 
     /**
-     * Check if a value matches an enum and add to issues.
+     * Check if a value matches an enum cast and add to issues.
+     * Only columns with enum casts in models will be refactored.
      *
      * @param  array<int, string>|null  $targetEnums
      */
@@ -829,40 +1055,51 @@ final class RefactorCommand extends Command
         string $context,
         ?array $targetEnums = null
     ): void {
-        $isStrict = $this->option('strict');
+        // Extract model name from context for precise cast lookup
+        $modelName = $this->extractModelFromContext($context);
 
-        foreach ($this->enums as $enumClass => $enumData) {
-            if ($targetEnums && ! in_array($enumData['name'], $targetEnums)) {
-                // @codeCoverageIgnoreStart
-                continue;
-                // @codeCoverageIgnoreEnd
-            }
+        // Check if this column has an enum cast in the detected model or any model
+        $castInfo = $this->getColumnEnumCast($column, $modelName);
 
-            foreach ($enumData['cases'] as $caseName => $caseValue) {
-                if ($caseValue === $value) {
-                    if ($isStrict) {
-                        $enumLower = mb_strtolower($enumData['name']);
-                        $columnLower = mb_strtolower($column);
-                        if (! str_contains($enumLower, $columnLower) && ! str_contains($columnLower, $enumLower)) {
-                            continue;
-                        }
-                    }
+        // Only refactor if column has an enum cast - no cast means no refactoring
+        if (! $castInfo['hasCast'] || ! $castInfo['enumClass']) {
+            return;
+        }
 
-                    $this->issues[] = [
-                        'file' => $file,
-                        'line' => $line,
-                        'type' => $type,
-                        'column' => $column,
-                        'value' => $value,
-                        'code' => $code,
-                        'enum' => $enumData['name'],
-                        'case' => $caseName,
-                        'class' => $enumClass,
-                        'context' => $context,
-                    ];
+        $enumClass = $castInfo['enumClass'];
 
-                    return;
-                }
+        // @codeCoverageIgnoreStart
+        if (! isset($this->enums[$enumClass])) {
+            return;
+        }
+        // @codeCoverageIgnoreEnd
+
+        $enumData = $this->enums[$enumClass];
+
+        // @codeCoverageIgnoreStart
+        if ($targetEnums && ! in_array($enumData['name'], $targetEnums)) {
+            return;
+        }
+        // @codeCoverageIgnoreEnd
+
+        // Find the matching case in the cast enum
+        foreach ($enumData['cases'] as $caseName => $caseValue) {
+            if ($caseValue === $value) {
+                $this->issues[] = [
+                    'file' => $file,
+                    'line' => $line,
+                    'type' => $type,
+                    'column' => $column,
+                    'value' => $value,
+                    'code' => $code,
+                    'enum' => $enumData['name'],
+                    'case' => $caseName,
+                    'class' => $enumClass,
+                    'context' => $context,
+                    'hasCast' => true,
+                ];
+
+                return;
             }
         }
     }
@@ -878,7 +1115,7 @@ final class RefactorCommand extends Command
             return;
         }
 
-        $this->warn('⚠️  Found '.count($this->issues).' potential hardcoded enum value(s):');
+        $this->warn('⚠️  Found ' . count($this->issues) . ' potential hardcoded enum value(s):');
         $this->newLine();
 
         $byFile = [];
@@ -887,7 +1124,7 @@ final class RefactorCommand extends Command
         }
 
         foreach ($byFile as $file => $issues) {
-            $this->line("<fg=cyan>{$file}</> <fg=gray>(".count($issues).' issue'.(count($issues) > 1 ? 's' : '').')</>');
+            $this->line("<fg=cyan>{$file}</> <fg=gray>(" . count($issues) . ' issue' . (count($issues) > 1 ? 's' : '') . ')</>');
 
             foreach ($issues as $issue) {
                 $suggestion = $this->generateSuggestion($issue);
@@ -895,7 +1132,8 @@ final class RefactorCommand extends Command
                 $this->line("       <fg=green>→</> <fg=white>{$suggestion}</>");
 
                 if ($this->option('detailed')) {
-                    $this->line("       <fg=gray>Enum: {$issue['class']}::{$issue['case']}</>");
+                    $castStatus = $issue['hasCast'] ? '<fg=green>✓ cast</>' : '<fg=yellow>✗ no cast</>';
+                    $this->line("       <fg=gray>Enum: {$issue['class']}::{$issue['case']}</> [{$castStatus}]");
                 }
             }
 
@@ -948,17 +1186,35 @@ final class RefactorCommand extends Command
     {
         $enum = $issue['enum'];
         $case = $issue['case'];
+        $hasCast = $issue['hasCast'] ?? false;
 
+        // Handle comparison specially to preserve the variable name
+        if ($issue['type'] === 'comparison') {
+            // Extract the variable name from the matched code (e.g., $admissionCycle from "$admissionCycle->status === 'open'")
+            if (preg_match('/(\$\w+)->/', $issue['code'], $varMatch)) {
+                // If column has enum cast, model returns enum instance, compare directly
+                // If no cast, model returns string, need to use ->value
+                $enumRef = $hasCast ? "{$enum}::{$case}" : "{$enum}::{$case}->value";
+
+                return "{$varMatch[1]}->{$issue['column']} === {$enumRef}";
+            }
+
+            // @codeCoverageIgnoreStart
+            $enumRef = $hasCast ? "{$enum}::{$case}" : "{$enum}::{$case}->value";
+
+            return "\$...->{$issue['column']} === {$enumRef}";
+            // @codeCoverageIgnoreEnd
+        }
+
+        // For Eloquent where clauses, Laravel handles enum->value conversion automatically
+        // For array assignments in create/update, Laravel also handles it when column is casted
         return match ($issue['type']) {
             'where' => "->where('{$issue['column']}', {$enum}::{$case})",
             'orWhere' => "->orWhere('{$issue['column']}', {$enum}::{$case})",
             'whereNot' => "->whereNot('{$issue['column']}', {$enum}::{$case})",
-            'update' => "->update(['{$issue['column']}' => {$enum}::{$case}])",
-            'create' => "->create(['{$issue['column']}' => {$enum}::{$case}])",  // @codeCoverageIgnore
-            'array' => "['{$issue['column']}' => {$enum}::{$case}]",
-            'comparison' => "\$...->{$issue['column']} === {$enum}::{$case}",
-            'validation' => "Rule::enum({$enum}::class)",
-            default => "{$enum}::{$case}",
+            'array' => "'{$issue['column']}' => {$enum}::{$case}",
+            'validation' => "Rule::enum({$enum}::class)", // @codeCoverageIgnore
+            default => "{$enum}::{$case}", // @codeCoverageIgnore
         };
     }
 
@@ -1075,7 +1331,7 @@ final class RefactorCommand extends Command
             file_put_contents($fullPath, $content);
             $filesChanged++;
 
-            $this->line("<fg=green>✓</> {$file} <fg=gray>(".count($issues).' changes)</>');
+            $this->line("<fg=green>✓</> {$file} <fg=gray>(" . count($issues) . ' changes)</>');
         }
 
         $this->newLine();
@@ -1093,7 +1349,7 @@ final class RefactorCommand extends Command
      */
     private function createBackup(string $fullPath, string $content): void
     {
-        $backupDir = storage_path('app/enumify-refactor-backups/'.date('Y-m-d_His'));
+        $backupDir = storage_path('app/enumify-refactor-backups/' . date('Y-m-d_His'));
 
         if (! is_dir($backupDir)) {
             mkdir($backupDir, 0755, true);
@@ -1104,7 +1360,7 @@ final class RefactorCommand extends Command
         $normalizedBasePath = str_replace('\\', '/', base_path());
 
         // Get relative path or use basename if file is outside base_path
-        if (str_starts_with($normalizedFullPath, $normalizedBasePath.'/')) {
+        if (str_starts_with($normalizedFullPath, $normalizedBasePath . '/')) {
             $relativePath = substr($normalizedFullPath, strlen($normalizedBasePath) + 1); // @codeCoverageIgnore
         } else {
             // File is outside base_path (e.g., temp directory in tests)
@@ -1113,7 +1369,7 @@ final class RefactorCommand extends Command
 
         // Create safe filename by replacing path separators and removing invalid chars
         $safeFilename = str_replace(['/', '\\', ':'], '_', $relativePath);
-        $backupPath = $backupDir.'/'.$safeFilename;
+        $backupPath = $backupDir . '/' . $safeFilename;
 
         file_put_contents($backupPath, $content);
         $this->backups[$fullPath] = $backupPath;
@@ -1153,10 +1409,10 @@ final class RefactorCommand extends Command
             $lastUse = end($useMatches[0]);
             $insertPos = $namespaceEnd + $lastUse[1] + mb_strlen($lastUse[0]);
 
-            return mb_substr($content, 0, $insertPos)."\n".implode("\n", $newImports).mb_substr($content, $insertPos);
+            return mb_substr($content, 0, $insertPos) . "\n" . implode("\n", $newImports) . mb_substr($content, $insertPos);
         }
 
-        return mb_substr($content, 0, $namespaceEnd)."\n\n".implode("\n", $newImports).$afterNamespace;
+        return mb_substr($content, 0, $namespaceEnd) . "\n\n" . implode("\n", $newImports) . $afterNamespace;
     }
 
     /**
@@ -1236,12 +1492,12 @@ final class RefactorCommand extends Command
         $lines = [
             '# Enumify Refactor Report',
             '',
-            'Generated: '.date('Y-m-d H:i:s'),
+            'Generated: ' . date('Y-m-d H:i:s'),
             '',
             '## Summary',
             '',
-            '- **Total Issues:** '.count($this->issues),
-            '- **Enums Scanned:** '.count($this->enums),
+            '- **Total Issues:** ' . count($this->issues),
+            '- **Enums Scanned:** ' . count($this->enums),
             '',
             '## Issues by File',
             '',

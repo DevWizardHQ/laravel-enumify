@@ -14,6 +14,9 @@ return [
     'paths' => [
         // Directories to scan for PHP enums (relative to base_path)
         'enums' => ['app/Enums'],
+        // Directories to scan for Laravel models (relative to base_path)
+        // Used by enumify:refactor to detect enum casts
+        'models' => ['app/Models'],
         // Output directory for generated TypeScript files (relative to base_path)
         'output' => 'resources/js/enums',
     ],

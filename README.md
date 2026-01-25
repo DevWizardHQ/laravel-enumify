@@ -346,7 +346,7 @@ php artisan enumify:sync --quiet
 
 ### enumify:refactor
 
-Scan your codebase for hardcoded enum values and refactor them to use proper enum references. This command also supports normalizing enum case names to UPPERCASE and updating all references throughout your application.
+Scan your codebase for hardcoded enum values and refactor them to use proper enum references. Only columns with enum casts in models will be refactored. This command also supports normalizing enum case names to UPPERCASE and updating all references throughout your application.
 
 #### Available Options
 
@@ -361,7 +361,6 @@ Scan your codebase for hardcoded enum values and refactor them to use proper enu
 | `--backup`         |       | Create backups before applying changes                           |
 | `--include=`       |       | File patterns to include (e.g., `*.php`)                         |
 | `--exclude=`       |       | Paths or patterns to exclude from scanning                       |
-| `--strict`         |       | Strict matching (column name must match enum context)            |
 | `--report=`        |       | Export report to file (formats: `json`, `csv`, `md`)             |
 | `--detailed`       |       | Show detailed output with code context                           |
 | `--normalize-keys` |       | Convert enum keys to UPPERCASE and fix all references            |
@@ -387,6 +386,8 @@ php artisan enumify:refactor --path=app/Services
 # Export a markdown report
 php artisan enumify:refactor --report=refactor-report.md
 ```
+
+**Note:** The refactor command only processes columns that have an enum cast defined in a model. If no cast is available for a column, it will skip refactoring for that column.
 
 #### Key Normalization (UPPERCASE)
 
