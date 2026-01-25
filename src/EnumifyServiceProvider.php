@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DevWizardHQ\Enumify;
 
 use DevWizardHQ\Enumify\Commands\InstallCommand;
+use DevWizardHQ\Enumify\Commands\RefactorCommand;
 use DevWizardHQ\Enumify\Commands\SyncCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -24,6 +25,7 @@ class EnumifyServiceProvider extends PackageServiceProvider
             ->hasCommands([
                 InstallCommand::class,
                 SyncCommand::class,
+                RefactorCommand::class,
             ]);
     }
 }
