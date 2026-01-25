@@ -58,7 +58,7 @@ class ManifestManager
     {
         $manifest = [
             'enums' => $enums,
-            'generated_at' => now()->toIso8601String(),
+            'generated_at' => date('c'), // ISO 8601 format
             'version' => $version,
         ];
 

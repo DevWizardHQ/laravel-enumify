@@ -11,6 +11,7 @@ use ReflectionEnum;
 
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\multiselect;
+use function Laravel\Prompts\progress;
 use function Laravel\Prompts\select;
 use function Laravel\Prompts\text;
 
@@ -717,9 +718,11 @@ final class RefactorCommand extends Command
             return;
         }
 
-        $this->withProgressBar($phpFiles, function ($file) use ($targetEnums) {
-            $this->scanFile($file->getPathname(), $targetEnums);
-        });
+        progress(
+            label: 'Scanning files...',
+            steps: $phpFiles,
+            callback: fn ($file) => $this->scanFile($file->getPathname(), $targetEnums),
+        );
 
         $this->newLine();
     }
@@ -1130,7 +1133,7 @@ final class RefactorCommand extends Command
         }
 
         if (empty($newImports)) {
-            return $content;
+            return $content;  // @codeCoverageIgnore
         }
 
         if (preg_match_all('/use\s+[\w\\\\]+;/', $afterNamespace, $useMatches, PREG_OFFSET_CAPTURE)) {
@@ -1152,7 +1155,7 @@ final class RefactorCommand extends Command
             'summary' => [
                 'total_issues' => count($this->issues),
                 'enums_loaded' => count($this->enums),
-                'scanned_at' => now()->toIso8601String(),
+                'scanned_at' => date('c'),
             ],
             'by_enum' => [],
             'by_file' => [],
@@ -1220,7 +1223,7 @@ final class RefactorCommand extends Command
         $lines = [
             '# Enumify Refactor Report',
             '',
-            'Generated: ' . now()->format('Y-m-d H:i:s'),
+            'Generated: ' . date('Y-m-d H:i:s'),
             '',
             '## Summary',
             '',
