@@ -119,7 +119,7 @@ final class RefactorCommand extends Command
         $this->loadEnums();
 
         if (count($this->enums) === 0) {
-            $this->components->error('No enums found. Check your enumify.paths.enums configuration.');
+            $this->error('No enums found. Check your enumify.paths.enums configuration.');
 
             return self::FAILURE;
         }
@@ -160,7 +160,7 @@ final class RefactorCommand extends Command
         $this->loadEnums();
 
         if (count($this->enums) === 0) {
-            $this->components->error('No enums found. Check your enumify.paths.enums configuration.');
+            $this->error('No enums found. Check your enumify.paths.enums configuration.');
 
             return self::FAILURE;
         }
@@ -257,7 +257,7 @@ final class RefactorCommand extends Command
         $this->loadEnumsWithPaths();
 
         if (count($this->enums) === 0) {
-            $this->components->error('No enums found. Check your enumify.paths.enums configuration.');
+            $this->error('No enums found. Check your enumify.paths.enums configuration.');
 
             return self::FAILURE;
         }
@@ -266,7 +266,7 @@ final class RefactorCommand extends Command
         $this->findNonUppercaseKeys();
 
         if (empty($this->keyNormalizationIssues)) {
-            $this->components->info('✅ All enum keys are already UPPERCASE!');
+            $this->info('All enum keys are already UPPERCASE!');
 
             return self::SUCCESS;
         }
@@ -313,7 +313,7 @@ final class RefactorCommand extends Command
         $this->findNonUppercaseKeys();
 
         if (empty($this->keyNormalizationIssues)) {
-            $this->components->info('✅ All enum keys are already UPPERCASE!');
+            $this->info('All enum keys are already UPPERCASE!');
 
             return self::SUCCESS;
         }
