@@ -717,9 +717,12 @@ final class RefactorCommand extends Command
             return;
         }
 
-        $this->withProgressBar($phpFiles, function ($file) use ($targetEnums) {
+        $fileCount = count($phpFiles);
+        $this->line("Scanning {$fileCount} file".($fileCount !== 1 ? 's' : '').'...');
+
+        foreach ($phpFiles as $file) {
             $this->scanFile($file->getPathname(), $targetEnums);
-        });
+        }
 
         $this->newLine();
     }
