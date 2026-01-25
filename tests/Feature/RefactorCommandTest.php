@@ -6,13 +6,13 @@ use Illuminate\Support\Facades\File;
 
 beforeEach(function () {
     // Create temp directories for testing
-    $this->tempDir = sys_get_temp_dir() . '/enumify-refactor-test-' . uniqid();
-    $this->appDir = $this->tempDir . '/app';
-    $this->modelsDir = $this->tempDir . '/app/Models';
+    $this->tempDir = sys_get_temp_dir().'/enumify-refactor-test-'.uniqid();
+    $this->appDir = $this->tempDir.'/app';
+    $this->modelsDir = $this->tempDir.'/app/Models';
     $this->backupDir = storage_path('app/enumify-refactor-backups');
 
     // Use the real fixtures path (already autoloaded)
-    $this->enumPath = realpath(__DIR__ . '/../Fixtures');
+    $this->enumPath = realpath(__DIR__.'/../Fixtures');
 
     mkdir($this->tempDir, 0755, true);
     mkdir($this->appDir, 0755, true);
@@ -38,7 +38,7 @@ class Order extends Model
 }
 PHP;
 
-    file_put_contents($this->modelsDir . '/Order.php', $orderModel);
+    file_put_contents($this->modelsDir.'/Order.php', $orderModel);
 
     // Create test files with hardcoded enum values using existing fixture enums
     // Note: The refactor command patterns match ->where() not ::where() (method chains, not static calls)
@@ -71,7 +71,7 @@ class OrderController
 }
 PHP;
 
-    file_put_contents($this->appDir . '/OrderController.php', $testController);
+    file_put_contents($this->appDir.'/OrderController.php', $testController);
 
     // Create file with array and validation patterns
     $testRequest = <<<'PHP'
@@ -99,7 +99,7 @@ class OrderRequest
 }
 PHP;
 
-    file_put_contents($this->appDir . '/OrderRequest.php', $testRequest);
+    file_put_contents($this->appDir.'/OrderRequest.php', $testRequest);
 
     // Create file that references the mixed-case enum
     $testService = <<<'PHP'
@@ -124,7 +124,7 @@ class StatusService
 }
 PHP;
 
-    file_put_contents($this->appDir . '/StatusService.php', $testService);
+    file_put_contents($this->appDir.'/StatusService.php', $testService);
 
     // Configure enumify to use the real fixtures path and models path
     config()->set('enumify.paths.enums', [$this->enumPath]);
@@ -144,7 +144,7 @@ afterEach(function () {
     }
 
     // Restore the MixedCaseStatus enum if it was modified
-    $mixedCaseEnumPath = __DIR__ . '/../Fixtures/MixedCaseStatus.php';
+    $mixedCaseEnumPath = __DIR__.'/../Fixtures/MixedCaseStatus.php';
     $originalContent = <<<'PHP'
 <?php
 
@@ -181,10 +181,10 @@ describe('enumify:refactor scan mode', function () {
 
     it('displays no issues when none found', function () {
         // Create empty app directory
-        $emptyDir = $this->tempDir . '/empty';
+        $emptyDir = $this->tempDir.'/empty';
         mkdir($emptyDir, 0755, true);
 
-        file_put_contents($emptyDir . '/Clean.php', '<?php class Clean {}');
+        file_put_contents($emptyDir.'/Clean.php', '<?php class Clean {}');
 
         $this->artisan('enumify:refactor', [
             '--path' => $emptyDir,
@@ -192,7 +192,7 @@ describe('enumify:refactor scan mode', function () {
     });
 
     it('fails when no enums are found', function () {
-        config()->set('enumify.paths.enums', [$this->tempDir . '/nonexistent']);
+        config()->set('enumify.paths.enums', [$this->tempDir.'/nonexistent']);
 
         $this->artisan('enumify:refactor', [
             '--path' => $this->appDir,
@@ -227,7 +227,7 @@ describe('enumify:refactor scan mode', function () {
     });
 
     it('warns when no PHP files found', function () {
-        $emptyDir = $this->tempDir . '/no-php';
+        $emptyDir = $this->tempDir.'/no-php';
         mkdir($emptyDir, 0755, true);
 
         $this->artisan('enumify:refactor', [
@@ -247,7 +247,7 @@ describe('enumify:refactor JSON output', function () {
 
 describe('enumify:refactor report export', function () {
     it('exports JSON report', function () {
-        $reportPath = $this->tempDir . '/report.json';
+        $reportPath = $this->tempDir.'/report.json';
 
         $this->artisan('enumify:refactor', [
             '--path' => $this->appDir,
@@ -260,7 +260,7 @@ describe('enumify:refactor report export', function () {
     });
 
     it('exports CSV report', function () {
-        $reportPath = $this->tempDir . '/report.csv';
+        $reportPath = $this->tempDir.'/report.csv';
 
         $this->artisan('enumify:refactor', [
             '--path' => $this->appDir,
@@ -272,7 +272,7 @@ describe('enumify:refactor report export', function () {
     });
 
     it('exports Markdown report', function () {
-        $reportPath = $this->tempDir . '/report.md';
+        $reportPath = $this->tempDir.'/report.md';
 
         $this->artisan('enumify:refactor', [
             '--path' => $this->appDir,
@@ -284,7 +284,7 @@ describe('enumify:refactor report export', function () {
     });
 
     it('defaults to JSON for unknown extension', function () {
-        $reportPath = $this->tempDir . '/report.txt';
+        $reportPath = $this->tempDir.'/report.txt';
 
         $this->artisan('enumify:refactor', [
             '--path' => $this->appDir,
@@ -297,7 +297,7 @@ describe('enumify:refactor report export', function () {
 
 describe('enumify:refactor dry-run mode', function () {
     it('previews changes without applying with --dry-run', function () {
-        $originalContent = file_get_contents($this->appDir . '/OrderController.php');
+        $originalContent = file_get_contents($this->appDir.'/OrderController.php');
 
         $this->artisan('enumify:refactor', [
             '--path' => $this->appDir,
@@ -305,7 +305,7 @@ describe('enumify:refactor dry-run mode', function () {
         ])->assertSuccessful();
 
         // File should remain unchanged
-        expect(file_get_contents($this->appDir . '/OrderController.php'))->toBe($originalContent);
+        expect(file_get_contents($this->appDir.'/OrderController.php'))->toBe($originalContent);
     });
 });
 
@@ -316,7 +316,7 @@ describe('enumify:refactor fix mode', function () {
             '--fix' => true,
         ])->assertSuccessful();
 
-        $content = file_get_contents($this->appDir . '/OrderController.php');
+        $content = file_get_contents($this->appDir.'/OrderController.php');
         // The refactor command should replace hardcoded values with enum references
         // Check that at least one pattern was replaced (could be any matching enum)
         expect($content)->toMatch('/[A-Za-z]+Status::[A-Za-z_]+/');
@@ -338,14 +338,14 @@ describe('enumify:refactor fix mode', function () {
             '--fix' => true,
         ])->assertSuccessful();
 
-        $content = file_get_contents($this->appDir . '/OrderController.php');
+        $content = file_get_contents($this->appDir.'/OrderController.php');
         expect($content)->toContain('use DevWizardHQ\Enumify\Tests\Fixtures\OrderStatus;');
     });
 
     it('handles files with no issues to fix', function () {
-        $cleanDir = $this->tempDir . '/clean';
+        $cleanDir = $this->tempDir.'/clean';
         mkdir($cleanDir, 0755, true);
-        file_put_contents($cleanDir . '/Clean.php', '<?php class Clean {}');
+        file_put_contents($cleanDir.'/Clean.php', '<?php class Clean {}');
 
         $this->artisan('enumify:refactor', [
             '--path' => $cleanDir,
@@ -363,7 +363,7 @@ describe('enumify:refactor normalize-keys mode', function () {
     });
 
     it('previews key normalization with --normalize-keys --dry-run', function () {
-        $enumPath = __DIR__ . '/../Fixtures/MixedCaseStatus.php';
+        $enumPath = __DIR__.'/../Fixtures/MixedCaseStatus.php';
         $originalContent = file_get_contents($enumPath);
 
         $this->artisan('enumify:refactor', [
@@ -383,7 +383,7 @@ describe('enumify:refactor normalize-keys mode', function () {
             '--path' => $this->appDir,
         ])->assertSuccessful();
 
-        $enumPath = __DIR__ . '/../Fixtures/MixedCaseStatus.php';
+        $enumPath = __DIR__.'/../Fixtures/MixedCaseStatus.php';
         $content = file_get_contents($enumPath);
         expect($content)->toContain('case PENDING =');
         expect($content)->toContain('case INPROGRESS =');
@@ -397,7 +397,7 @@ describe('enumify:refactor normalize-keys mode', function () {
             '--path' => $this->appDir,
         ])->assertSuccessful();
 
-        $content = file_get_contents($this->appDir . '/StatusService.php');
+        $content = file_get_contents($this->appDir.'/StatusService.php');
         expect($content)->toContain('MixedCaseStatus::PENDING');
         expect($content)->toContain('MixedCaseStatus::INPROGRESS');
     });
@@ -433,7 +433,7 @@ describe('enumify:refactor normalize-keys mode', function () {
     });
 
     it('fails normalize-keys when no enums found', function () {
-        config()->set('enumify.paths.enums', [$this->tempDir . '/nonexistent']);
+        config()->set('enumify.paths.enums', [$this->tempDir.'/nonexistent']);
 
         $this->artisan('enumify:refactor', [
             '--normalize-keys' => true,
@@ -447,7 +447,7 @@ describe('enumify:refactor normalize-keys mode', function () {
             '--path' => $this->appDir,
         ])->assertSuccessful();
 
-        $enumPath = __DIR__ . '/../Fixtures/MixedCaseStatus.php';
+        $enumPath = __DIR__.'/../Fixtures/MixedCaseStatus.php';
         $content = file_get_contents($enumPath);
         expect($content)->toContain('self::PENDING');
     });
@@ -513,9 +513,9 @@ describe('enumify:refactor path handling', function () {
 
     it('supports relative paths converted to absolute', function () {
         // Create a temp directory with relative path structure
-        $relativeDir = $this->tempDir . '/relative-test';
+        $relativeDir = $this->tempDir.'/relative-test';
         mkdir($relativeDir, 0755, true);
-        file_put_contents($relativeDir . '/Test.php', '<?php class Test {}');
+        file_put_contents($relativeDir.'/Test.php', '<?php class Test {}');
 
         $this->artisan('enumify:refactor', [
             '--path' => $relativeDir,
@@ -542,14 +542,14 @@ class OrderService
 }
 PHP;
 
-        file_put_contents($this->appDir . '/OrderService.php', $fileWithImport);
+        file_put_contents($this->appDir.'/OrderService.php', $fileWithImport);
 
         $this->artisan('enumify:refactor', [
             '--path' => $this->appDir,
             '--fix' => true,
         ])->assertSuccessful();
 
-        $content = file_get_contents($this->appDir . '/OrderService.php');
+        $content = file_get_contents($this->appDir.'/OrderService.php');
         // Count occurrences of the import - should be exactly 1
         $count = substr_count($content, 'use DevWizardHQ\Enumify\Tests\Fixtures\OrderStatus;');
         expect($count)->toBe(1);
@@ -561,7 +561,7 @@ PHP;
             '--fix' => true,
         ])->assertSuccessful();
 
-        $content = file_get_contents($this->appDir . '/OrderController.php');
+        $content = file_get_contents($this->appDir.'/OrderController.php');
         expect($content)->toContain('namespace App\Http\Controllers;');
         expect($content)->toContain('use DevWizardHQ\Enumify\Tests\Fixtures\OrderStatus;');
     });
@@ -574,7 +574,7 @@ $status = 'pending';
 $orders = Order::where('status', 'pending')->get();
 PHP;
 
-        file_put_contents($this->appDir . '/NoNamespace.php', $noNamespaceFile);
+        file_put_contents($this->appDir.'/NoNamespace.php', $noNamespaceFile);
 
         $this->artisan('enumify:refactor', [
             '--path' => $this->appDir,
@@ -593,14 +593,14 @@ describe('enumify:refactor edge cases', function () {
     });
 
     it('handles non-PHP files in enum directory', function () {
-        file_put_contents($this->enumPath . '/readme.txt', 'This is not PHP');
+        file_put_contents($this->enumPath.'/readme.txt', 'This is not PHP');
 
         $this->artisan('enumify:refactor', [
             '--path' => $this->appDir,
         ])->assertSuccessful();
 
         // Clean up
-        @unlink($this->enumPath . '/readme.txt');
+        @unlink($this->enumPath.'/readme.txt');
     });
 
     it('handles PHP files without namespace in enum directory', function () {
@@ -614,14 +614,14 @@ enum SimpleEnum: string
 }
 PHP;
 
-        file_put_contents($this->enumPath . '/NoNamespaceEnum.php', $noNamespaceEnum);
+        file_put_contents($this->enumPath.'/NoNamespaceEnum.php', $noNamespaceEnum);
 
         $this->artisan('enumify:refactor', [
             '--path' => $this->appDir,
         ])->assertSuccessful();
 
         // Clean up
-        @unlink($this->enumPath . '/NoNamespaceEnum.php');
+        @unlink($this->enumPath.'/NoNamespaceEnum.php');
     });
 
     it('handles PHP files with namespace but no enum in enum directory', function () {
@@ -637,21 +637,21 @@ class NotAnEnumHelper
 }
 PHP;
 
-        file_put_contents($this->enumPath . '/NotAnEnumHelper.php', $classFile);
+        file_put_contents($this->enumPath.'/NotAnEnumHelper.php', $classFile);
 
         $this->artisan('enumify:refactor', [
             '--path' => $this->appDir,
         ])->assertSuccessful();
 
         // Clean up
-        @unlink($this->enumPath . '/NotAnEnumHelper.php');
+        @unlink($this->enumPath.'/NotAnEnumHelper.php');
     });
 
     it('respects default excludes', function () {
         // Create a vendor directory - should be excluded by default
-        $vendorDir = $this->appDir . '/vendor';
+        $vendorDir = $this->appDir.'/vendor';
         mkdir($vendorDir, 0755, true);
-        file_put_contents($vendorDir . '/VendorFile.php', '<?php Order::where("status", "pending");');
+        file_put_contents($vendorDir.'/VendorFile.php', '<?php Order::where("status", "pending");');
 
         $this->artisan('enumify:refactor', [
             '--path' => $this->appDir,
@@ -667,7 +667,7 @@ PHP;
 $orders = $query->where('status', 'pending')->get();
 PHP;
 
-        file_put_contents($this->appDir . '/NoNamespaceQuery.php', $noNamespaceFile);
+        file_put_contents($this->appDir.'/NoNamespaceQuery.php', $noNamespaceFile);
 
         $this->artisan('enumify:refactor', [
             '--path' => $this->appDir,
@@ -675,7 +675,7 @@ PHP;
         ])->assertSuccessful();
 
         // The file should be modified but no imports added
-        $content = file_get_contents($this->appDir . '/NoNamespaceQuery.php');
+        $content = file_get_contents($this->appDir.'/NoNamespaceQuery.php');
         expect($content)->not->toContain('use ');
     });
 });
@@ -698,7 +698,7 @@ describe('enumify:refactor backup functionality', function () {
             '--backup' => true,
         ])->assertSuccessful();
 
-        $backupDirs = glob($this->backupDir . '/*');
+        $backupDirs = glob($this->backupDir.'/*');
         expect($backupDirs)->not->toBeEmpty();
     });
 
@@ -710,10 +710,10 @@ describe('enumify:refactor backup functionality', function () {
         ])->assertSuccessful();
 
         // Find backup file
-        $backupDirs = glob($this->backupDir . '/*');
+        $backupDirs = glob($this->backupDir.'/*');
         expect($backupDirs)->not->toBeEmpty();
 
-        $backupFiles = glob($backupDirs[0] . '/*');
+        $backupFiles = glob($backupDirs[0].'/*');
         expect($backupFiles)->not->toBeEmpty();
     });
 });
@@ -726,12 +726,12 @@ describe('enumify:refactor multiple file processing', function () {
         ])->assertSuccessful();
 
         // Controller should have method call patterns fixed
-        $controllerContent = file_get_contents($this->appDir . '/OrderController.php');
+        $controllerContent = file_get_contents($this->appDir.'/OrderController.php');
         // Check that at least one pattern was replaced with an enum reference
         expect($controllerContent)->toMatch('/[A-Za-z]+Status::[A-Za-z_]+/');
 
         // Request should have array patterns fixed
-        $requestContent = file_get_contents($this->appDir . '/OrderRequest.php');
+        $requestContent = file_get_contents($this->appDir.'/OrderRequest.php');
         // Check that the status array pattern was replaced (could be mixed case)
         expect($requestContent)->toMatch('/[A-Za-z]+Status::[A-Za-z_]+/');
     });
