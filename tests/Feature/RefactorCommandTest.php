@@ -6,7 +6,8 @@ beforeEach(function () {
     $this->outputPath = sys_get_temp_dir().'/enumify-refactor-test-'.uniqid();
     mkdir($this->outputPath, 0755, true);
 
-    $this->enumPath = realpath(__DIR__.'/../Fixtures');
+    // Use direct path without realpath() to avoid issues in some environments
+    $this->enumPath = __DIR__.'/../Fixtures';
 
     config()->set('enumify.paths.enums', [$this->enumPath]);
     config()->set('enumify.paths.output', $this->outputPath);

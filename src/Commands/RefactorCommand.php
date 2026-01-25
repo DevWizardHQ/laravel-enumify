@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace DevWizardHQ\Enumify\Commands;
 
-use DevWizardHQ\Enumify\Services\EnumDiscoveryService;
 use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
@@ -101,12 +100,8 @@ final class RefactorCommand extends Command
         'public',
     ];
 
-    private EnumDiscoveryService $discovery;
-
     public function handle(): int
     {
-        $this->discovery = new EnumDiscoveryService;
-
         // Handle interactive mode first
         if ($this->option('interactive')) {
             return $this->runInteractive();
@@ -157,6 +152,8 @@ final class RefactorCommand extends Command
 
     /**
      * Run in interactive mode using Laravel Prompts.
+     *
+     * @codeCoverageIgnore
      */
     private function runInteractive(): int
     {
@@ -301,6 +298,8 @@ final class RefactorCommand extends Command
 
     /**
      * Run normalize keys in interactive mode.
+     *
+     * @codeCoverageIgnore
      */
     private function runNormalizeKeysInteractive(): int
     {
@@ -481,12 +480,18 @@ final class RefactorCommand extends Command
         $references = [];
         $searchPattern = $enumName.'::'.$caseName;
 
-        $appPath = app_path();
-        if (! is_dir($appPath)) {
+        $pathOption = $this->option('path');
+        if ($pathOption) {
+            $scanPath = $this->isAbsolutePath($pathOption) ? $pathOption : base_path($pathOption);
+        } else {
+            $scanPath = is_dir(app_path()) ? app_path() : base_path();
+        }
+
+        if (! is_dir($scanPath)) {
             return $references;
         }
 
-        $files = File::allFiles($appPath);
+        $files = File::allFiles($scanPath);
 
         foreach ($files as $file) {
             if ($file->getExtension() !== 'php') {
@@ -591,7 +596,9 @@ final class RefactorCommand extends Command
         $refsByFile = [];
         foreach ($this->keyNormalizationIssues as $issue) {
             foreach ($issue['references'] as $ref) {
-                $fullPath = base_path($ref['file']);
+                // Handle absolute paths for references
+                $fullPath = $this->isAbsolutePath($ref['file']) ? $ref['file'] : base_path($ref['file']);
+
                 $refsByFile[$fullPath][] = [
                     'enum' => $issue['enum'],
                     'oldKey' => $issue['oldKey'],
@@ -1027,7 +1034,13 @@ final class RefactorCommand extends Command
         $changesApplied = 0;
 
         foreach ($byFile as $file => $issues) {
-            $fullPath = base_path($file);
+            $fullPath = $this->isAbsolutePath($file) ? $file : base_path($file);
+            if (! file_exists($fullPath)) {
+                $this->components->warn("File not found: {$fullPath}");
+
+                continue;
+            }
+
             $content = file_get_contents($fullPath);
 
             if ($withBackup) {
