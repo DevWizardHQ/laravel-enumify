@@ -398,7 +398,7 @@ final class RefactorCommand extends Command
         }
 
         $count = count($this->enums);
-        $this->info("✅ Loaded {$count} enum" . ($count !== 1 ? 's' : ''));
+        $this->info("✅ Loaded {$count} enum".($count !== 1 ? 's' : ''));
         $this->newLine();
     }
 
@@ -437,7 +437,7 @@ final class RefactorCommand extends Command
             return null;
         }
 
-        return $namespaceMatch[1] . '\\' . $enumMatch[1];
+        return $namespaceMatch[1].'\\'.$enumMatch[1];
     }
 
     /**
@@ -480,7 +480,7 @@ final class RefactorCommand extends Command
     private function findEnumReferences(string $enumName, string $caseName): array
     {
         $references = [];
-        $searchPattern = $enumName . '::' . $caseName;
+        $searchPattern = $enumName.'::'.$caseName;
 
         $pathOption = $this->option('path');
         if ($pathOption) {
@@ -506,7 +506,7 @@ final class RefactorCommand extends Command
             foreach ($lines as $lineNum => $line) {
                 if (str_contains($line, $searchPattern)) {
                     $references[] = [
-                        'file' => str_replace(base_path() . '/', '', $file->getPathname()),
+                        'file' => str_replace(base_path().'/', '', $file->getPathname()),
                         'line' => $lineNum + 1,
                         'code' => trim($line),
                     ];
@@ -522,7 +522,7 @@ final class RefactorCommand extends Command
      */
     private function displayKeyNormalizationResults(): void
     {
-        $this->warn('⚠️  Found ' . count($this->keyNormalizationIssues) . ' key(s) to normalize:');
+        $this->warn('⚠️  Found '.count($this->keyNormalizationIssues).' key(s) to normalize:');
         $this->newLine();
 
         $totalRefs = 0;
@@ -532,7 +532,7 @@ final class RefactorCommand extends Command
             $totalRefs += $refCount;
 
             $this->line("<fg=cyan>{$issue['enum']}</>");
-            $this->line("  <fg=red>{$issue['oldKey']}</> → <fg=green>{$issue['newKey']}</> <fg=gray>({$refCount} reference" . ($refCount !== 1 ? 's' : '') . ')</>');
+            $this->line("  <fg=red>{$issue['oldKey']}</> → <fg=green>{$issue['newKey']}</> <fg=gray>({$refCount} reference".($refCount !== 1 ? 's' : '').')</>');
 
             if ($this->option('detailed') && ! empty($issue['references'])) {
                 foreach ($issue['references'] as $ref) {
@@ -542,7 +542,7 @@ final class RefactorCommand extends Command
         }
 
         $this->newLine();
-        $this->info('📊 Total: ' . count($this->keyNormalizationIssues) . " keys, {$totalRefs} references");
+        $this->info('📊 Total: '.count($this->keyNormalizationIssues)." keys, {$totalRefs} references");
     }
 
     /**
@@ -573,14 +573,14 @@ final class RefactorCommand extends Command
 
             foreach ($issues as $issue) {
                 // Replace case declaration: case OldKey = 'value' -> case NEW_KEY = 'value'
-                $pattern = '/case\s+' . preg_quote($issue['oldKey'], '/') . '\s*=/';
-                $replacement = 'case ' . $issue['newKey'] . ' =';
+                $pattern = '/case\s+'.preg_quote($issue['oldKey'], '/').'\s*=/';
+                $replacement = 'case '.$issue['newKey'].' =';
                 $content = preg_replace($pattern, $replacement, $content);
 
                 // Replace self references within the enum file
                 $content = str_replace(
-                    'self::' . $issue['oldKey'],
-                    'self::' . $issue['newKey'],
+                    'self::'.$issue['oldKey'],
+                    'self::'.$issue['newKey'],
                     $content
                 );
 
@@ -590,8 +590,8 @@ final class RefactorCommand extends Command
             file_put_contents($filePath, $content);
             $filesChanged++;
 
-            $relativePath = str_replace(base_path() . '/', '', $filePath);
-            $this->line("<fg=green>✓</> {$relativePath} <fg=gray>(" . count($issues) . ' keys)</>');
+            $relativePath = str_replace(base_path().'/', '', $filePath);
+            $this->line("<fg=green>✓</> {$relativePath} <fg=gray>(".count($issues).' keys)</>');
         }
 
         // Update references throughout the codebase
@@ -623,8 +623,8 @@ final class RefactorCommand extends Command
             }
 
             foreach ($refs as $ref) {
-                $search = $ref['enum'] . '::' . $ref['oldKey'];
-                $replace = $ref['enum'] . '::' . $ref['newKey'];
+                $search = $ref['enum'].'::'.$ref['oldKey'];
+                $replace = $ref['enum'].'::'.$ref['newKey'];
                 $content = str_replace($search, $replace, $content);
                 $refsUpdated++;
             }
@@ -632,8 +632,8 @@ final class RefactorCommand extends Command
             file_put_contents($filePath, $content);
             $filesChanged++;
 
-            $relativePath = str_replace(base_path() . '/', '', $filePath);
-            $this->line("<fg=green>✓</> {$relativePath} <fg=gray>(" . count($refs) . ' refs)</>');
+            $relativePath = str_replace(base_path().'/', '', $filePath);
+            $this->line("<fg=green>✓</> {$relativePath} <fg=gray>(".count($refs).' refs)</>');
         }
 
         $this->newLine();
@@ -735,7 +735,7 @@ final class RefactorCommand extends Command
     private function scanFile(string $filePath, ?array $targetEnums = null): void
     {
         $content = file_get_contents($filePath);
-        $relativePath = str_replace(base_path() . '/', '', $filePath);
+        $relativePath = str_replace(base_path().'/', '', $filePath);
         $lines = explode("\n", $content);
 
         foreach ($this->patterns as $type => $pattern) {
@@ -878,7 +878,7 @@ final class RefactorCommand extends Command
             return;
         }
 
-        $this->warn('⚠️  Found ' . count($this->issues) . ' potential hardcoded enum value(s):');
+        $this->warn('⚠️  Found '.count($this->issues).' potential hardcoded enum value(s):');
         $this->newLine();
 
         $byFile = [];
@@ -887,7 +887,7 @@ final class RefactorCommand extends Command
         }
 
         foreach ($byFile as $file => $issues) {
-            $this->line("<fg=cyan>{$file}</> <fg=gray>(" . count($issues) . ' issue' . (count($issues) > 1 ? 's' : '') . ')</>');
+            $this->line("<fg=cyan>{$file}</> <fg=gray>(".count($issues).' issue'.(count($issues) > 1 ? 's' : '').')</>');
 
             foreach ($issues as $issue) {
                 $suggestion = $this->generateSuggestion($issue);
@@ -1075,7 +1075,7 @@ final class RefactorCommand extends Command
             file_put_contents($fullPath, $content);
             $filesChanged++;
 
-            $this->line("<fg=green>✓</> {$file} <fg=gray>(" . count($issues) . ' changes)</>');
+            $this->line("<fg=green>✓</> {$file} <fg=gray>(".count($issues).' changes)</>');
         }
 
         $this->newLine();
@@ -1093,7 +1093,7 @@ final class RefactorCommand extends Command
      */
     private function createBackup(string $fullPath, string $content): void
     {
-        $backupDir = storage_path('app/enumify-refactor-backups/' . date('Y-m-d_His'));
+        $backupDir = storage_path('app/enumify-refactor-backups/'.date('Y-m-d_His'));
 
         if (! is_dir($backupDir)) {
             mkdir($backupDir, 0755, true);
@@ -1104,7 +1104,7 @@ final class RefactorCommand extends Command
         $normalizedBasePath = str_replace('\\', '/', base_path());
 
         // Get relative path or use basename if file is outside base_path
-        if (str_starts_with($normalizedFullPath, $normalizedBasePath . '/')) {
+        if (str_starts_with($normalizedFullPath, $normalizedBasePath.'/')) {
             $relativePath = substr($normalizedFullPath, strlen($normalizedBasePath) + 1);
         } else {
             // File is outside base_path (e.g., temp directory in tests)
@@ -1113,7 +1113,7 @@ final class RefactorCommand extends Command
 
         // Create safe filename by replacing path separators and removing invalid chars
         $safeFilename = str_replace(['/', '\\', ':'], '_', $relativePath);
-        $backupPath = $backupDir . '/' . $safeFilename;
+        $backupPath = $backupDir.'/'.$safeFilename;
 
         file_put_contents($backupPath, $content);
         $this->backups[$fullPath] = $backupPath;
@@ -1153,10 +1153,10 @@ final class RefactorCommand extends Command
             $lastUse = end($useMatches[0]);
             $insertPos = $namespaceEnd + $lastUse[1] + mb_strlen($lastUse[0]);
 
-            return mb_substr($content, 0, $insertPos) . "\n" . implode("\n", $newImports) . mb_substr($content, $insertPos);
+            return mb_substr($content, 0, $insertPos)."\n".implode("\n", $newImports).mb_substr($content, $insertPos);
         }
 
-        return mb_substr($content, 0, $namespaceEnd) . "\n\n" . implode("\n", $newImports) . $afterNamespace;
+        return mb_substr($content, 0, $namespaceEnd)."\n\n".implode("\n", $newImports).$afterNamespace;
     }
 
     /**
@@ -1236,12 +1236,12 @@ final class RefactorCommand extends Command
         $lines = [
             '# Enumify Refactor Report',
             '',
-            'Generated: ' . date('Y-m-d H:i:s'),
+            'Generated: '.date('Y-m-d H:i:s'),
             '',
             '## Summary',
             '',
-            '- **Total Issues:** ' . count($this->issues),
-            '- **Enums Scanned:** ' . count($this->enums),
+            '- **Total Issues:** '.count($this->issues),
+            '- **Enums Scanned:** '.count($this->enums),
             '',
             '## Issues by File',
             '',
