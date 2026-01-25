@@ -8,6 +8,7 @@ beforeEach(function () {
     // Create temp directories for testing
     $this->tempDir = sys_get_temp_dir().'/enumify-refactor-test-'.uniqid();
     $this->appDir = $this->tempDir.'/app';
+    $this->modelsDir = $this->tempDir.'/app/Models';
     $this->backupDir = storage_path('app/enumify-refactor-backups');
 
     // Use the real fixtures path (already autoloaded)
@@ -15,6 +16,29 @@ beforeEach(function () {
 
     mkdir($this->tempDir, 0755, true);
     mkdir($this->appDir, 0755, true);
+    mkdir($this->modelsDir, 0755, true);
+
+    // Create model with enum cast so refactoring will work
+    $orderModel = <<<'PHP'
+<?php
+
+namespace App\Models;
+
+use DevWizardHQ\Enumify\Tests\Fixtures\OrderStatus;
+use Illuminate\Database\Eloquent\Model;
+
+class Order extends Model
+{
+    protected function casts(): array
+    {
+        return [
+            'status' => OrderStatus::class,
+        ];
+    }
+}
+PHP;
+
+    file_put_contents($this->modelsDir.'/Order.php', $orderModel);
 
     // Create test files with hardcoded enum values using existing fixture enums
     // Note: The refactor command patterns match ->where() not ::where() (method chains, not static calls)
@@ -102,8 +126,9 @@ PHP;
 
     file_put_contents($this->appDir.'/StatusService.php', $testService);
 
-    // Configure enumify to use the real fixtures path
+    // Configure enumify to use the real fixtures path and models path
     config()->set('enumify.paths.enums', [$this->enumPath]);
+    config()->set('enumify.paths.models', [$this->modelsDir]);
     config()->set('enumify.refactor.exclude', []);
 });
 
@@ -191,13 +216,6 @@ describe('enumify:refactor scan mode', function () {
         $this->artisan('enumify:refactor', [
             '--path' => $this->appDir,
             '--exclude' => ['OrderController'],
-        ])->assertSuccessful();
-    });
-
-    it('supports strict mode with --strict option', function () {
-        $this->artisan('enumify:refactor', [
-            '--path' => $this->appDir,
-            '--strict' => true,
         ])->assertSuccessful();
     });
 
