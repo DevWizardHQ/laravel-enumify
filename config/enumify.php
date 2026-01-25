@@ -108,4 +108,24 @@ return [
         // Exclude enums matching these patterns
         'exclude' => [],
     ],
+
+    /*
+     * |--------------------------------------------------------------------------
+     * | Refactor Command Configuration
+     * |--------------------------------------------------------------------------
+     * |
+     * | Configuration for the enumify:refactor command.
+     * |
+     */
+    'refactor' => [
+        // Default paths to exclude from scanning
+        'exclude' => [
+            'vendor',
+            'node_modules',
+            'storage',
+            '.git',
+            'bootstrap/cache',
+            'public',
+        ],
+    ],
 ];

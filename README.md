@@ -6,31 +6,33 @@
 [![NPM Version](https://img.shields.io/npm/v/@devwizard/vite-plugin-enumify.svg?style=flat-square)](https://www.npmjs.com/package/@devwizard/vite-plugin-enumify)
 [![NPM Downloads](https://img.shields.io/npm/dt/@devwizard/vite-plugin-enumify.svg?style=flat-square)](https://www.npmjs.com/package/@devwizard/vite-plugin-enumify)
 
-**Auto-generate TypeScript enums and maps from Laravel PHP enums, with Vite integration.**
+**Auto-generate TypeScript enums from Laravel PHP enums. Refactor hardcoded values and normalize enum keys.**
 
-Laravel Enumify keeps frontend TypeScript enums in sync with backend PHP enums automatically. It generates files before Vite compiles, so imports never fail and no runtime fetching is needed.
+Laravel Enumify keeps frontend TypeScript enums in sync with backend PHP enums automatically. It also scans your codebase for hardcoded enum values and can refactor them to use proper enum references. Includes tools for normalizing enum case names to UPPERCASE.
 
 ## Features
 
--   🔄 **Automatic Sync** – Runs during `npm run dev` and `npm run build` via the Vite plugin
--   🧭 **Wayfinder-Level DX** – One install command to scaffold everything
--   🏷️ **Labels Support** – `label()` or static `labels()` become TS maps
--   🎨 **Custom Methods** – Public zero-arg scalar methods become TS maps
--   📦 **Barrel Exports** – Optional `index.ts` for clean imports
--   ⚡ **Smart Caching** – Only regenerate changed files using hashes
--   🔒 **Git-Friendly** – `.gitkeep` and strict `.gitignore` patterns supported
+- 🔄 **Automatic Sync** – Runs during `npm run dev` and `npm run build` via the Vite plugin
+- 🧭 **Wayfinder-Level DX** – One install command to scaffold everything
+- 🏷️ **Labels Support** – `label()` or static `labels()` become TS maps
+- 🎨 **Custom Methods** – Public zero-arg scalar methods become TS maps
+- 📦 **Barrel Exports** – Optional `index.ts` for clean imports
+- ⚡ **Smart Caching** – Only regenerate changed files using hashes
+- 🔒 **Git-Friendly** – `.gitkeep` and strict `.gitignore` patterns supported
+- 🔧 **Refactor Command** – Scan and fix hardcoded enum values in your codebase
+- 🔠 **Key Normalization** – Convert enum keys to UPPERCASE and update all references
 
 ## Requirements
 
--   PHP 8.2+
--   Laravel 10, 11, or 12
--   Node.js 18+
--   Vite 4, 5, 6, or 7
+- PHP 8.2+
+- Laravel 10, 11, or 12
+- Node.js 18+
+- Vite 4, 5, 6, or 7
 
 ## Package Links
 
--   [Composer](https://packagist.org/packages/devwizardhq/laravel-enumify) 
--   [NPM](https://www.npmjs.com/package/@devwizard/vite-plugin-enumify)
+- [Composer](https://packagist.org/packages/devwizardhq/laravel-enumify)
+- [NPM](https://www.npmjs.com/package/@devwizard/vite-plugin-enumify)
 
 ## Installation
 
@@ -48,10 +50,10 @@ php artisan enumify:install
 
 This will:
 
--   Create `resources/js/enums/`
--   Create `resources/js/enums/.gitkeep`
--   Print the `.gitignore` lines to add (and offer to append them)
--   Offer to publish the config file
+- Create `resources/js/enums/`
+- Create `resources/js/enums/.gitkeep`
+- Print the `.gitignore` lines to add (and offer to append them)
+- Offer to publish the config file
 
 ### 3) Configure Vite
 
@@ -304,11 +306,11 @@ This ensures your enums are fully localized on the frontend while respecting Rea
 
 Enumify will convert methods into TypeScript maps when they meet these rules:
 
--   Public, non-static, zero-argument methods only
--   Return types must be `string`, `int`, `float`, `bool`, or nullable/union combinations of those
--   Methods without return types or unsupported return types are skipped
--   Map naming: `EnumName + MethodName` (pluralized for non-boolean methods)
--   Boolean methods also generate a helper function
+- Public, non-static, zero-argument methods only
+- Return types must be `string`, `int`, `float`, `bool`, or nullable/union combinations of those
+- Methods without return types or unsupported return types are skipped
+- Map naming: `EnumName + MethodName` (pluralized for non-boolean methods)
+- Boolean methods also generate a helper function
 
 Labels are handled separately using `label()` or `labels()`.
 
@@ -341,6 +343,81 @@ php artisan enumify:sync --format=json
 # Suppress console output (useful for Vite)
 php artisan enumify:sync --quiet
 ```
+
+### enumify:refactor
+
+Scan your codebase for hardcoded enum values and refactor them to use proper enum references. This command also supports normalizing enum case names to UPPERCASE and updating all references throughout your application.
+
+#### Available Options
+
+| Option             | Short | Description                                                      |
+| ------------------ | ----- | ---------------------------------------------------------------- |
+| `--fix`            | `-f`  | Apply refactoring changes to files                               |
+| `--dry-run`        | `-d`  | Preview changes without modifying files                          |
+| `--enum=`          | `-e`  | Target a specific enum class by short name (e.g., `OrderStatus`) |
+| `--path=`          | `-p`  | Limit scan to a specific directory (e.g., `app/Models`)          |
+| `--interactive`    | `-i`  | Run in interactive mode with guided prompts                      |
+| `--json`           | `-j`  | Output results in JSON format                                    |
+| `--backup`         |       | Create backups before applying changes                           |
+| `--include=`       |       | File patterns to include (e.g., `*.php`)                         |
+| `--exclude=`       |       | Paths or patterns to exclude from scanning                       |
+| `--strict`         |       | Strict matching (column name must match enum context)            |
+| `--report=`        |       | Export report to file (formats: `json`, `csv`, `md`)             |
+| `--detailed`       |       | Show detailed output with code context                           |
+| `--normalize-keys` |       | Convert enum keys to UPPERCASE and fix all references            |
+
+#### Scanning for Hardcoded Values
+
+```bash
+# Scan and display hardcoded enum values
+php artisan enumify:refactor
+
+# Preview what changes would be made
+php artisan enumify:refactor --dry-run
+
+# Apply fixes with backup
+php artisan enumify:refactor --fix --backup
+
+# Target a specific enum
+php artisan enumify:refactor --enum=OrderStatus
+
+# Limit scan to a directory
+php artisan enumify:refactor --path=app/Services
+
+# Export a markdown report
+php artisan enumify:refactor --report=refactor-report.md
+```
+
+#### Key Normalization (UPPERCASE)
+
+The `--normalize-keys` flag converts enum case names from any case format to UPPERCASE and updates all references in your codebase:
+
+- `case Active` → `case ACTIVE`
+- `case pending` → `case PENDING`
+- `case InProgress` → `case IN_PROGRESS`
+
+```bash
+# Preview key normalization changes
+php artisan enumify:refactor --normalize-keys --dry-run
+
+# Apply key normalization with backup
+php artisan enumify:refactor --normalize-keys --fix --backup
+```
+
+#### Interactive Mode
+
+Run the command interactively with guided prompts:
+
+```bash
+php artisan enumify:refactor --interactive
+```
+
+This mode allows you to:
+
+- Choose between scan, preview, apply, or normalize modes
+- Select which enums to check
+- Specify the directory to scan
+- Confirm changes before applying
 
 ## Configuration
 
@@ -382,9 +459,9 @@ return [
 
 ## Generated Output
 
--   `resources/js/enums/*.ts` – one file per enum
--   `resources/js/enums/index.ts` – barrel exports (optional)
--   `resources/js/enums/.enumify-manifest.json` – hashes, timestamps, versions
+- `resources/js/enums/*.ts` – one file per enum
+- `resources/js/enums/index.ts` – barrel exports (optional)
+- `resources/js/enums/.enumify-manifest.json` – hashes, timestamps, versions
 
 The generator uses atomic writes and skips unchanged files for speed.
 
@@ -392,8 +469,8 @@ The generator uses atomic writes and skips unchanged files for speed.
 
 This repo contains two packages:
 
--   `packages/laravel-enumify` (Composer)
--   `packages/vite-plugin-enumify` (NPM)
+- `packages/laravel-enumify` (Composer)
+- `packages/vite-plugin-enumify` (NPM)
 
 ### Composer path repository
 
@@ -434,14 +511,14 @@ Release tip: tag releases after merging to `main`, then publish to Packagist and
 
 Suggested pipelines:
 
--   PHP: `composer test` and `composer test-coverage`
--   Node: `pnpm run build && pnpm run typecheck`
+- PHP: `composer test` and `composer test-coverage`
+- Node: `pnpm run build && pnpm run typecheck`
 
 ## Troubleshooting
 
--   **Missing enums folder**: run `php artisan enumify:install` or ensure `resources/js/enums/.gitkeep` exists.
--   **Imports fail during build**: ensure the Vite plugin is enabled and runs before `laravel()`.
--   **Enums not discovered**: check `config/enumify.php` paths and include/exclude filters.
+- **Missing enums folder**: run `php artisan enumify:install` or ensure `resources/js/enums/.gitkeep` exists.
+- **Imports fail during build**: ensure the Vite plugin is enabled and runs before `laravel()`.
+- **Enums not discovered**: check `config/enumify.php` paths and include/exclude filters.
 
 ## Changelog
 
