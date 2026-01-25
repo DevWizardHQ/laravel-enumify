@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace DevWizardHQ\Enumify\Commands;
 
+use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
-use Exception;
 use ReflectionEnum;
 
 use function Laravel\Prompts\confirm;
