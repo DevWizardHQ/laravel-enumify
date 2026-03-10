@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace DevWizardHQ\Enumify\Tests\Fixtures;
 
+use DevWizardHQ\Enumify\Concerns\EnumHelpers;
+
 /**
  * Fixture: Backed enum with custom methods (color, isActive, etc.).
  * This demonstrates full method extraction for TypeScript generation.
  */
 enum CampusStatus: string
 {
+    use EnumHelpers;
     case ACTIVE = 'active';
     case SUSPENDED = 'suspended';
     case INACTIVE = 'inactive';

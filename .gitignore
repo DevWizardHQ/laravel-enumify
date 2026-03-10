@@ -31,3 +31,5 @@ testbench.yaml
 /docs
 /coverage
 auth.json
+
+.DS_Store
