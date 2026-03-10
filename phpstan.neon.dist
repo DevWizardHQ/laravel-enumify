@@ -9,3 +9,5 @@ parameters:
     tmpDir: build/phpstan
     checkOctaneCompatibility: true
     checkModelProperties: true
+    ignoreErrors:
+        - '#Trait DevWizardHQ\\Enumify\\Concerns\\EnumHelpers is used zero times and is not analysed#'
