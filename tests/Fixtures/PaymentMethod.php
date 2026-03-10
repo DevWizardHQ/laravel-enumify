@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DevWizardHQ\Enumify\Tests\Fixtures;
 
+use DevWizardHQ\Enumify\Concerns\EnumHelpers;
 use DevWizardHQ\Enumify\Contracts\HasLabels;
 
 /**
@@ -11,6 +12,7 @@ use DevWizardHQ\Enumify\Contracts\HasLabels;
  */
 enum PaymentMethod: string implements HasLabels
 {
+    use EnumHelpers;
     case CREDIT_CARD = 'credit_card';
     case DEBIT_CARD = 'debit_card';
     case BANK_TRANSFER = 'bank_transfer';
