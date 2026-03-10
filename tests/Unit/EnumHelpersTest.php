@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use DevWizardHQ\Enumify\Tests\Fixtures\CampusStatus;
+use DevWizardHQ\Enumify\Tests\Fixtures\OrderStatus;
 use DevWizardHQ\Enumify\Tests\Fixtures\PaymentMethod;
 
 it('returns options as value => label pairs', function () {
@@ -27,6 +28,18 @@ it('returns options using a custom method name', function () {
     ]);
 });
 
+it('falls back to humanized case name when label method does not exist', function () {
+    $options = OrderStatus::options();
+
+    expect($options)->toBe([
+        'pending' => 'Pending',
+        'processing' => 'Processing',
+        'shipped' => 'Shipped',
+        'delivered' => 'Delivered',
+        'cancelled' => 'Cancelled',
+    ]);
+});
+
 it('returns select options as value/label arrays', function () {
     $options = PaymentMethod::selectOptions();
 
@@ -46,6 +59,18 @@ it('returns select options using a custom method name', function () {
         ['value' => 'active', 'label' => 'green'],
         ['value' => 'suspended', 'label' => 'red'],
         ['value' => 'inactive', 'label' => 'gray'],
+    ]);
+});
+
+it('falls back to humanized case name in select options when method does not exist', function () {
+    $options = OrderStatus::selectOptions();
+
+    expect($options)->toBe([
+        ['value' => 'pending', 'label' => 'Pending'],
+        ['value' => 'processing', 'label' => 'Processing'],
+        ['value' => 'shipped', 'label' => 'Shipped'],
+        ['value' => 'delivered', 'label' => 'Delivered'],
+        ['value' => 'cancelled', 'label' => 'Cancelled'],
     ]);
 });
 

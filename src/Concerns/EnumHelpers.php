@@ -18,19 +18,28 @@ trait EnumHelpers
      * Get all enum cases as an array of value => label pairs.
      *
      * Calls the given method name on each case (defaults to "label").
-     * Requires the enum to implement a public instance method with that name.
+     * Falls back to a humanized version of the case name when the method does not exist.
+     *
+     * Note: PHP coerces numeric-string keys to integers in arrays.
+     * Use {@see selectOptions()} if your enum has numeric-like string values.
      *
      * @return array<string|int, string>
      */
     public static function options(string $label = 'label'): array
     {
         return collect(self::cases())
-            ->mapWithKeys(fn (self $case): array => [$case->value => $case->{$label}()])
+            ->mapWithKeys(fn (self $case): array => [
+                $case->value => method_exists($case, $label)
+                    ? $case->{$label}()
+                    : self::humanize($case->name),
+            ])
             ->all();
     }
 
     /**
      * Get all enum cases as an array of {value, label} objects for frontend selects.
+     *
+     * Falls back to a humanized version of the case name when the method does not exist.
      *
      * @return array<int, array{value: string|int, label: string}>
      */
@@ -39,7 +48,9 @@ trait EnumHelpers
         return collect(self::cases())
             ->map(fn (self $case): array => [
                 'value' => $case->value,
-                'label' => $case->{$label}(),
+                'label' => method_exists($case, $label)
+                    ? $case->{$label}()
+                    : self::humanize($case->name),
             ])
             ->values()
             ->all();
@@ -70,6 +81,14 @@ trait EnumHelpers
      */
     public static function hasValue(string|int $value): bool
     {
-        return in_array($value, self::values(), true);
+        return self::tryFrom($value) !== null;
+    }
+
+    /**
+     * Convert a SCREAMING_SNAKE_CASE name to a human-readable title.
+     */
+    private static function humanize(string $name): string
+    {
+        return ucwords(strtolower(str_replace('_', ' ', $name)));
     }
 }
