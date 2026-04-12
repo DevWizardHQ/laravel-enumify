@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.3.1 - 2026-04-12
+
+### What's Changed
+
+* build(deps): bump ramsey/composer-install from 3 to 4 by @dependabot[bot] in https://github.com/DevWizardHQ/laravel-enumify/pull/16
+* build(deps): bump pnpm/action-setup from 4 to 5 by @dependabot[bot] in https://github.com/DevWizardHQ/laravel-enumify/pull/17
+* build(deps): bump dependabot/fetch-metadata from 2.5.0 to 3.0.0 by @dependabot[bot] in https://github.com/DevWizardHQ/laravel-enumify/pull/20
+* Add support for Laravel 13 by @Lukasss93 in https://github.com/DevWizardHQ/laravel-enumify/pull/19
+* Fix CI matrix: drop PHP 8.5, add PHP 8.2 coverage by @iqbalhasandev in https://github.com/DevWizardHQ/laravel-enumify/pull/22
+* Fix workflows triggering on tag pushes by @iqbalhasandev in https://github.com/DevWizardHQ/laravel-enumify/pull/23
+
+### New Contributors
+
+* @Lukasss93 made their first contribution in https://github.com/DevWizardHQ/laravel-enumify/pull/19
+
+**Full Changelog**: https://github.com/DevWizardHQ/laravel-enumify/compare/v1.3.0...v1.3.1
+
 ## v1.3.0 - 2026-03-10
 
 ### What's Changed
