@@ -5,6 +5,50 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.4.0 - 2026-04-12
+
+### 🚀 What's Changed
+
+#### 🔧 Dependencies
+
+* Bumped **ramsey/composer-install** from `v3` → `v4`
+  → #16 by @dependabot
+* Bumped **pnpm/action-setup** from `v4` → `v5`
+  → #17 by @dependabot
+* Bumped **dependabot/fetch-metadata** from `v2.5.0` → `v3.0.0`
+  → #20 by @dependabot
+
+#### ✨ Features
+
+* Added support for **Laravel 13**
+  → #19 by @Lukasss93
+
+#### 🛠️ Fixes & Improvements
+
+* Fixed CI matrix:
+  
+  * Dropped **PHP 8.5**
+  * Added **PHP 8.2 coverage**
+    → #22 by @iqbalhasandev
+  
+* Fixed workflows triggering on tag pushes
+  → #23 by @iqbalhasandev
+  
+
+
+---
+
+### 👏 New Contributors
+
+* 🎉 @Lukasss93 made their first contribution → #19
+
+
+---
+
+### 📦 Full Changelog
+
+👉 [https://github.com/DevWizardHQ/laravel-enumify/compare/v1.3.1...v1.4.0](https://github.com/DevWizardHQ/laravel-enumify/compare/v1.3.1...v1.4.0)
+
 ## v1.3.1 - 2026-04-12
 
 ### What's Changed
