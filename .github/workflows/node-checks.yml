@@ -27,7 +27,7 @@ jobs:
           cache: "pnpm"
           cache-dependency-path: packages/vite-plugin-enumify/pnpm-lock.yaml
       - name: Setup pnpm
-        uses: pnpm/action-setup@v5
+        uses: pnpm/action-setup@v6
         with:
           version: 9
           run_install: false
