@@ -207,7 +207,7 @@ class EnumDiscoveryService
         $backingType = null;
 
         if ($isBacked) {
-            $backingType = $reflection->getBackingType()?->getName();
+            $backingType = $reflection->getBackingType()->getName();
         }
 
         $cases = [];
@@ -247,7 +247,7 @@ class EnumDiscoveryService
     /**
      * Discover custom methods on the enum.
      *
-     * @param  array<\ReflectionEnumUnitCase|\ReflectionEnumBackedCase>  $enumCases
+     * @param  array<\ReflectionEnumUnitCase|ReflectionEnumBackedCase>  $enumCases
      * @return array<EnumMethodDefinition>
      */
     private function discoverMethods(ReflectionEnum $reflection, array $enumCases): array

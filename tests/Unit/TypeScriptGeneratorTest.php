@@ -14,7 +14,7 @@ beforeEach(function () {
 describe('TypeScriptGenerator', function () {
     it('throws exception for invalid localization mode', function () {
         expect(fn () => new TypeScriptGenerator(localizationMode: 'invalid'))
-            ->toThrow(\InvalidArgumentException::class, 'Invalid localization mode "invalid". Allowed values are: none, react, vue.');
+            ->toThrow(InvalidArgumentException::class, 'Invalid localization mode "invalid". Allowed values are: none, react, vue.');
     });
 
     it('generates basic const export and utils', function () {

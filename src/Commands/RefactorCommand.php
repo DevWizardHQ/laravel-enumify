@@ -918,7 +918,7 @@ final class RefactorCommand extends Command
     {
         $files = File::allFiles($path);
         $configExcludes = config('enumify.refactor.exclude', []);
-        $excludes = array_merge($this->defaultExcludes, $configExcludes, $this->option('exclude') ?? []);
+        $excludes = array_merge($this->defaultExcludes, $configExcludes, $this->option('exclude'));
 
         // Filter PHP files
         $phpFiles = array_filter($files, function ($file) use ($excludes) {

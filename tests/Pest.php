@@ -1,8 +1,9 @@
 <?php
 
 declare(strict_types=1);
+use DevWizardHQ\Enumify\Tests\TestCase;
 
-uses(DevWizardHQ\Enumify\Tests\TestCase::class)->in('Feature', 'Unit');
+uses(TestCase::class)->in('Feature', 'Unit');
 
 /*
  * |--------------------------------------------------------------------------
