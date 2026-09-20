@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.4.1 - 2026-09-20
+
+Maintenance release. No user-facing behaviour changes.
+
+### Dependencies
+
+- Allow Pest 5 alongside 3 and 4. The constraint is additive rather than a replacement, because Pest 5 requires PHP `^8.3` while the CI matrix still covers 8.2.
+- `actions/checkout` 6 → 7, `actions/setup-node` 6 → 7, `pnpm/action-setup` 5 → 6.
+
+### Fixes
+
+- `EnumDiscoveryService` — dropped a redundant nullsafe call; `getBackingType()` is non-null inside the `isBacked()` branch.
+- `RefactorCommand` — dropped a dead `?? []`; `--exclude` is an `=*` array option and never yields null.
+
+### Removed
+
+- `.github/workflows/node-checks.yml`, which built `packages/vite-plugin-enumify` — a path that has never existed in this repository. It failed on every edit to the workflow file and was the reason `main` showed as red.
+
+PHPStan is back to zero errors; 161 tests pass.
+
 ## v1.4.0 - 2026-04-12
 
 ### 🚀 What's Changed
