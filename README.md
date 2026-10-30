@@ -25,7 +25,7 @@ Laravel Enumify keeps frontend TypeScript enums in sync with backend PHP enums a
 ## Requirements
 
 - PHP 8.2+
-- Laravel 10, 11, or 12
+- Laravel 12 or 13
 - Node.js 18+
 - Vite 4, 5, 6, or 7
 
