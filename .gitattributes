@@ -20,3 +20,5 @@
 /phpstan-baseline.neon  export-ignore
 .lefthook/** text eol=lf
 lefthook.yml text eol=lf
+/lefthook.yml       export-ignore
+/.lefthook          export-ignore
