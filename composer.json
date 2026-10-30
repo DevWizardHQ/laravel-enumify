@@ -25,7 +25,6 @@
         "illuminate/support": "^10.0||^11.0||^12.0||^13.0"
     },
     "require-dev": {
-        "evilmartians/lefthook": "^2.2",
         "laravel/pint": "^1.14",
         "nunomaduro/collision": "^8.8",
         "larastan/larastan": "^3.0",
@@ -49,12 +48,6 @@
     },
     "scripts": {
         "post-autoload-dump": "@composer run prepare",
-        "post-install-cmd": [
-            "lefthook install || exit 0"
-        ],
-        "post-update-cmd": [
-            "lefthook install || exit 0"
-        ],
         "prepare": "@php vendor/bin/testbench package:discover --ansi",
         "analyse": "vendor/bin/phpstan analyse",
         "test": "vendor/bin/pest",
